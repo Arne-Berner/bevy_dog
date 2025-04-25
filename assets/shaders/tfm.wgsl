@@ -47,27 +47,25 @@ fn calculate_eigenvector(in: FullscreenVertexOutput) -> @location(0) vec4f {
     let y = 1/view.viewport.w;
 
     let Sx = vec3((
-        1.0f * textureSample(screen_texture, sampler, in.uv + vec2(-x, -y)).rgb +
-        2.0f * textureSample(screen_texture, sampler, in.uv + vec2(-x,  0.0)).rgb +
-        1.0f * textureSample(screen_texture, sampler, in.uv + vec2(-x,  y)).rgb +
-        -1.0f * textureSample(screen_texture, sampler, in.uv + vec2(x, -y)).rgb +
-        -2.0f * textureSample(screen_texture, sampler, in.uv + vec2(x,  0.0)).rgb +
-        -1.0f * textureSample(screen_texture, sampler,in.uv + vec2(x,  y)).rgb
-    ) / 4.0f);
+        1.0 * textureSample(screen_texture, texture_sampler, in.uv + vec2(-x, -y)).rgb +
+        2.0 * textureSample(screen_texture, texture_sampler, in.uv + vec2(-x,  0.0)).rgb +
+        1.0 * textureSample(screen_texture, texture_sampler, in.uv + vec2(-x,  y)).rgb +
+        -1.0 * textureSample(screen_texture, texture_sampler, in.uv + vec2(x, -y)).rgb +
+        -2.0 * textureSample(screen_texture, texture_sampler, in.uv + vec2(x,  0.0)).rgb +
+        -1.0 * textureSample(screen_texture, texture_sampler,in.uv + vec2(x,  y)).rgb
+    ) / 4.0);
 
-/*
     let Sy = vec3((
-        1.0f * textureSample(screen_texture, in.uv + vec2(-x, -y)).rgb +
-        2.0f * textureSample(screen_texture, in.uv + vec2( 0.0, -y)).rgb +
-        1.0f * textureSample(screen_texture, in.uv + vec2( x, -y)).rgb +
-        -1.0f * textureSample(screen_texture, in.uv + vec2(-x, y)).rgb +
-        -2.0f * textureSample(screen_texture, in.uv + vec2( 0.0, y)).rgb +
-        -1.0f * textureSample(screen_texture, in.uv + vec2( x, y)).rgb
-    ) / 4.0f);
+        1.0 * textureSample(screen_texture, texture_sampler,in.uv + vec2(-x, -y)).rgb +
+        2.0 * textureSample(screen_texture, texture_sampler,in.uv + vec2( 0.0, -y)).rgb +
+        1.0 * textureSample(screen_texture, texture_sampler,in.uv + vec2( x, -y)).rgb +
+        -1.0 * textureSample(screen_texture, texture_sampler,in.uv + vec2(-x, y)).rgb +
+        -2.0 * textureSample(screen_texture, texture_sampler,in.uv + vec2( 0.0, y)).rgb +
+        -1.0 * textureSample(screen_texture, texture_sampler,in.uv + vec2( x, y)).rgb
+    ) / 4.0);
 
     
     out = vec4(dot(Sx, Sx), dot(Sy, Sy), dot(Sx, Sy),1.0);
-    */
     return out;
 }
 

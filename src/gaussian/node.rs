@@ -53,34 +53,36 @@ impl ViewNode for DoGNode {
         let pipeline_cache = world.resource::<PipelineCache>();
         let dog_pipeline = world.resource::<DoGPipelines>();
 
-        let rgb2lab_pipeline = pipeline_cache
-            .get_render_pipeline(view_pipelines.rgb2lab_pipeline_id)
-            .unwrap();
+        let err = pipeline_cache.get_render_pipeline_state(view_pipelines.rgb2lab_pipeline_id);
 
         let _eigenvector_tfm_pipeline = pipeline_cache
             .get_render_pipeline_state(view_pipelines.tfm_pipeline_ids.eigenvector_pipeline_id)
             .unwrap();
-        /*
-        let err = match eigenvector_tfm_pipeline_state {
+        if let Some(err) = match err {
             bevy::render::render_resource::CachedPipelineState::Queued => None,
             bevy::render::render_resource::CachedPipelineState::Creating(_) => None,
             bevy::render::render_resource::CachedPipelineState::Ok(_) => None,
             bevy::render::render_resource::CachedPipelineState::Err(pipeline_cache_error) => {
                 Some(pipeline_cache_error)
             }
-        };
-        let err = match err.unwrap() {
-            bevy::render::render_resource::PipelineCacheError::ShaderNotLoaded(_) => None,
-            bevy::render::render_resource::PipelineCacheError::ProcessShaderError(
-                composer_error,
-            ) => Some(composer_error),
-            bevy::render::render_resource::PipelineCacheError::ShaderImportNotYetAvailable => None,
-            bevy::render::render_resource::PipelineCacheError::CreateShaderModule(_) => None,
-        };
-        if let Some(state) = err {
-            println!("{:?}", state.inner);
+        } {
+            let err = match err {
+                bevy::render::render_resource::PipelineCacheError::ShaderNotLoaded(_) => None,
+                bevy::render::render_resource::PipelineCacheError::ProcessShaderError(
+                    composer_error,
+                ) => Some(composer_error),
+                bevy::render::render_resource::PipelineCacheError::ShaderImportNotYetAvailable => {
+                    None
+                }
+                bevy::render::render_resource::PipelineCacheError::CreateShaderModule(_) => None,
+            };
+            if let Some(state) = err {
+                println!("{:?}", state.inner);
+            }
         }
-        */
+        let rgb2lab_pipeline = pipeline_cache
+            .get_render_pipeline(view_pipelines.rgb2lab_pipeline_id)
+            .unwrap();
         // let vertical_tfm_pipeline = vertical_tfm_pipeline_state.unwrap();
         /*
         // Fetch the render pipelines.

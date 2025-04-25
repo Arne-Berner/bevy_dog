@@ -27,8 +27,8 @@ fn xyz2lab(c:vec3f) -> vec3f {
     var v = vec3(0.);
 
     v.x = select((7.787 * n.x) + (16.0 / 116.0), pow(n.x, 1.0 / 3.0), n.x > 0.008856);
-    v.x = select((7.787 * n.y) + (16.0 / 116.0), pow(n.y, 1.0 / 3.0), n.y > 0.008856);
-    v.x = select((7.787 * n.z) + (16.0 / 116.0), pow(n.z, 1.0 / 3.0), n.z > 0.008856);
+    v.y = select((7.787 * n.y) + (16.0 / 116.0), pow(n.y, 1.0 / 3.0), n.y > 0.008856);
+    v.z = select((7.787 * n.z) + (16.0 / 116.0), pow(n.z, 1.0 / 3.0), n.z > 0.008856);
 
     return vec3((116.0 * v.y) - 16.0, 500.0 * (v.x - v.y), 200.0 * (v.y - v.z));
 }
@@ -38,12 +38,6 @@ fn rgb2lab(c: vec3f) -> vec3f {
 
     return vec3(lab.x / 100.0f, 0.5 + 0.5 * (lab.y / 127.0), 0.5 + 0.5 * (lab.z / 127.0));
 }
-
-
-@group(0) @binding(0) var screen_texture: texture_2d<f32>;
-@group(0) @binding(1) var texture_sampler: sampler;
-@group(0) @binding(2) var<uniform> view: View;
-@group(0) @binding(3) var<uniform> config: DoGSettings;
 
 struct DoGSettings {
     thresholding: i32,
@@ -72,12 +66,19 @@ struct DoGSettings {
     thresholds: vec4f,
 }
 
+@group(0) @binding(0) var screen_texture: texture_2d<f32>;
+@group(0) @binding(1) var texture_sampler: sampler;
+@group(0) @binding(2) var<uniform> view: View;
+@group(0) @binding(3) var<uniform> config: DoGSettings;
 
 @fragment
 fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
-    // let main = textureSample(screen_texture, texture_sampler, uv);
-    // let lab = rgb2lab(screen_fragment.rgb);
-    // return vec4(lab, 1.);
-    return vec4(1.);
+    let main = textureSample(screen_texture, texture_sampler, in.uv);
+    // let lab = rgb2lab(main.rgb);
+    let xyz = rgb2xyz(main.rgb);
+    let lab = xyz2lab(xyz);
+    let lum = luminance(main.rgb);
+    let out = vec3(lum);
+    return vec4(lab, 1.);
 }
 
