@@ -66,14 +66,14 @@ fn setup(
         Camera3d::default(),
         Transform::from_translation(Vec3::new(20.0, 18.0, 0.0))
             .looking_at(Vec3::default(), Vec3::Y),
+        /*
         Msaa::Off,
-        DepthPrepass,
-        NormalPrepass,
         Fxaa {
             enabled: true,
             edge_threshold: Sensitivity::Extreme,
             edge_threshold_min: Sensitivity::Extreme,
         },
+        */
         DoGSettings::default(),
     ));
 
