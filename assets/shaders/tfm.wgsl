@@ -42,12 +42,9 @@ struct DoGSettings {
 @fragment
 fn calculate_eigenvector(in: FullscreenVertexOutput) -> @location(0) vec4f {
     var out = vec4(1.0);
-#ifdef EIGENVECTOR
     let x = 1/view.viewport.z;
     let y = 1/view.viewport.w;
-    return vec4(1.);
 
-/*
     let Sx = vec3((
         1.0f * textureSample(screen_texture, in.uv + vec2(-x, -y)).rgb +
         2.0f * textureSample(screen_texture, in.uv + vec2(-x,  0.0)).rgb +
@@ -57,6 +54,7 @@ fn calculate_eigenvector(in: FullscreenVertexOutput) -> @location(0) vec4f {
         -1.0f * textureSample(screen_texture, in.uv + vec2(x,  y)).rgb
     ) / 4.0f);
 
+/*
     let Sy = vec3((
         1.0f * textureSample(screen_texture, in.uv + vec2(-x, -y)).rgb +
         2.0f * textureSample(screen_texture, in.uv + vec2( 0.0, -y)).rgb +
@@ -69,7 +67,6 @@ fn calculate_eigenvector(in: FullscreenVertexOutput) -> @location(0) vec4f {
     
     out = vec4(dot(Sx, Sx), dot(Sy, Sy), dot(Sx, Sy),1.0);
     */
-#endif
     return out;
 }
 
@@ -79,6 +76,7 @@ fn calculate_eigenvector(in: FullscreenVertexOutput) -> @location(0) vec4f {
 @fragment
 fn horizontal_blur_pass(in: FullscreenVertexOutput) -> @location(0) vec4f {
     var out = vec4(1.0);
+    /*
     let kernelRadius = max(1.0, floor(sigma_c * 2.45));
     var col = vec4<f32>(0.0);
     var kernelSum = 0.0;
@@ -93,6 +91,7 @@ fn horizontal_blur_pass(in: FullscreenVertexOutput) -> @location(0) vec4f {
     }
     
     out = col / kernelSum;
+    */
     return out;
 }
 #endif
@@ -102,6 +101,7 @@ fn horizontal_blur_pass(in: FullscreenVertexOutput) -> @location(0) vec4f {
 @fragment
 fn vertical_blur_pass(in: FullscreenVertexOutput) -> @location(0) vec4f {
     var out = vec4(1.0);
+    /*
     let kernelRadius = max(1.0, floor(sigma_c * 2.45));
     var col = vec4<f32>(0.0);
     var kernelSum = 0.0;
@@ -122,6 +122,7 @@ fn vertical_blur_pass(in: FullscreenVertexOutput) -> @location(0) vec4f {
     
     
     out = select(vec4(0.,1.,0.,1.), vec4(normalize(d), sqrt(lamda1), 1.), length(d) != 0);
+    */
     return out;
 }
 #endif
