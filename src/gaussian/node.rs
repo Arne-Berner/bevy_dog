@@ -57,9 +57,30 @@ impl ViewNode for DoGNode {
             .get_render_pipeline(view_pipelines.rgb2lab_pipeline_id)
             .unwrap();
 
-        let eigenvector_tfm_pipeline_state = pipeline_cache
-            .get_render_pipeline_state(view_pipelines.tfm_pipeline_ids.eigenvector_pipeline_id);
-        println!("{:?}", eigenvector_tfm_pipeline_state);
+        let _eigenvector_tfm_pipeline = pipeline_cache
+            .get_render_pipeline_state(view_pipelines.tfm_pipeline_ids.eigenvector_pipeline_id)
+            .unwrap();
+        /*
+        let err = match eigenvector_tfm_pipeline_state {
+            bevy::render::render_resource::CachedPipelineState::Queued => None,
+            bevy::render::render_resource::CachedPipelineState::Creating(_) => None,
+            bevy::render::render_resource::CachedPipelineState::Ok(_) => None,
+            bevy::render::render_resource::CachedPipelineState::Err(pipeline_cache_error) => {
+                Some(pipeline_cache_error)
+            }
+        };
+        let err = match err.unwrap() {
+            bevy::render::render_resource::PipelineCacheError::ShaderNotLoaded(_) => None,
+            bevy::render::render_resource::PipelineCacheError::ProcessShaderError(
+                composer_error,
+            ) => Some(composer_error),
+            bevy::render::render_resource::PipelineCacheError::ShaderImportNotYetAvailable => None,
+            bevy::render::render_resource::PipelineCacheError::CreateShaderModule(_) => None,
+        };
+        if let Some(state) = err {
+            println!("{:?}", state.inner);
+        }
+        */
         // let vertical_tfm_pipeline = vertical_tfm_pipeline_state.unwrap();
         /*
         // Fetch the render pipelines.
@@ -112,7 +133,6 @@ impl ViewNode for DoGNode {
         // It is required to avoid creating a new pipeline each frame,
         // which is expensive due to shader compilation.
         // Get the settings uniform binding
-        println!("inside node");
         let view_uniforms = world.resource::<ViewUniforms>();
         let Some(view_uniforms) = view_uniforms.uniforms.binding() else {
             println!("view uniforms");

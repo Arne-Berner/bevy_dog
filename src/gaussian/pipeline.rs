@@ -319,6 +319,11 @@ impl SpecializedRenderPipeline for TFMPipeline {
     fn specialize(&self, key: Self::Key) -> RenderPipelineDescriptor {
         // let shader_defs = vec![preset.shader_def()];
 
+        let entry_point = match key {
+            TFMPipelineKeys::Eigenvector => "fragment".into(),
+            TFMPipelineKeys::Vertical => "vertical_blur_pass".into(),
+            TFMPipelineKeys::Horizontal => "horizontal_blur_pass".into(),
+        };
         // I don't think I have a couple of different ones
         // Those are the defs shown in the shader to use special parses
         let shader_defs = match key {
@@ -327,14 +332,21 @@ impl SpecializedRenderPipeline for TFMPipeline {
             TFMPipelineKeys::Horizontal => vec!["HORIZONTAL".into()],
         };
 
+        let label = match key {
+            TFMPipelineKeys::Eigenvector => Some("Eigenvector".into()),
+            TFMPipelineKeys::Vertical => Some("VerticalPass".into()),
+            TFMPipelineKeys::Horizontal => Some("HorizontalPass".into()),
+        };
+        println!("entry_point:{:?}", entry_point);
+
         RenderPipelineDescriptor {
-            label: Some("RGBA2LAB".into()),
+            label,
             layout: vec![self.postprocess_bind_group_layout.clone()],
             vertex: fullscreen_shader_vertex_state(),
             fragment: Some(FragmentState {
                 shader: TFM_SHADER_HANDLE,
                 shader_defs,
-                entry_point: "fragment".into(),
+                entry_point,
                 targets: vec![Some(ColorTargetState {
                     format: TextureFormat::bevy_default(),
                     blend: None,

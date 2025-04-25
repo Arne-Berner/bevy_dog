@@ -1,6 +1,7 @@
 #import bevy_core_pipeline::fullscreen_vertex_shader::FullscreenVertexOutput
 #import bevy_render::view::View
 
+const PI: f32 = 3.14159265359;
 fn gaussian(sigma: f32, pos: f32)->f32{
     return (1. / sqrt(2. * PI * sigma * sigma)) * exp(-(pos * pos) / (2. * sigma * sigma));
 }
@@ -36,36 +37,47 @@ struct DoGSettings {
     hatch_resolution: vec4f,
     thresholds: vec4f,
 }
-#ifdef EIGENVECTOR
-@fragment
-fn calculate_eigenvector(in: FullscreenVertexOutput) -> vec3f{
-    let Sx = vec3(
-        1.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x, -texel_size.y)).rgb +
-        2.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x,  0.0)).rgb +
-        1.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x,  texel_size.y)).rgb +
-        -1.0f * textureSample(main_tex, in.uv + vec2(texel_size.x, -texel_size.y)).rgb +
-        -2.0f * textureSample(main_tex, in.uv + vec2(texel_size.x,  0.0)).rgb +
-        -1.0f * textureSample(main_tex, in.uv + vec2(texel_size.x,  texel_size.y)).rgb
-    ) / 4.0f;
 
-    let Sy = (
-        1.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x, -texel_size.y)).rgb +
-        2.0f * textureSample(main_tex, in.uv + vec2( 0.0, -texel_size.y)).rgb +
-        1.0f * textureSample(main_tex, in.uv + vec2( texel_size.x, -texel_size.y)).rgb +
-        -1.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x, texel_size.y)).rgb +
-        -2.0f * textureSample(main_tex, in.uv + vec2( 0.0, texel_size.y)).rgb +
-        -1.0f * textureSample(main_tex, in.uv + vec2( texel_size.x, texel_size.y)).rgb
-    ) / 4.0f;
+@fragment
+fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
+    var out = vec4(1.0);
+#ifdef EIGENVECTOR
+    let x = 1/view.viewport.z;
+    let y = 1/view.viewport.w;
+    return vec4(1.);
+
+/*
+    let Sx = vec3((
+        1.0f * textureSample(screen_texture, in.uv + vec2(-x, -y)).rgb +
+        2.0f * textureSample(screen_texture, in.uv + vec2(-x,  0.0)).rgb +
+        1.0f * textureSample(screen_texture, in.uv + vec2(-x,  y)).rgb +
+        -1.0f * textureSample(screen_texture, in.uv + vec2(x, -y)).rgb +
+        -2.0f * textureSample(screen_texture, in.uv + vec2(x,  0.0)).rgb +
+        -1.0f * textureSample(screen_texture, in.uv + vec2(x,  y)).rgb
+    ) / 4.0f);
+
+    let Sy = vec3((
+        1.0f * textureSample(screen_texture, in.uv + vec2(-x, -y)).rgb +
+        2.0f * textureSample(screen_texture, in.uv + vec2( 0.0, -y)).rgb +
+        1.0f * textureSample(screen_texture, in.uv + vec2( x, -y)).rgb +
+        -1.0f * textureSample(screen_texture, in.uv + vec2(-x, y)).rgb +
+        -2.0f * textureSample(screen_texture, in.uv + vec2( 0.0, y)).rgb +
+        -1.0f * textureSample(screen_texture, in.uv + vec2( x, y)).rgb
+    ) / 4.0f);
 
     
-    return vec3(dot(Sx, Sx), dot(Sy, Sy), dot(Sx, Sy));
+    out = vec4(dot(Sx, Sx), dot(Sy, Sy), dot(Sx, Sy),1.0);
+    */
+#endif
+    return out;
 }
 
-#endif
 
 #ifdef HORIZONTAL
+// horizontal blur pass
 @fragment
-fn horizontal_tfn_blur(in: FullscreenVertexOutput) -> @location(0) vec4f {
+fn horizontal_blur_pass(in: FullscreenVertexOutput) -> @location(0) vec4f {
+    var out = vec4(1.0);
     let kernelRadius = max(1.0, floor(sigma_c * 2.45));
     var col = vec4<f32>(0.0);
     var kernelSum = 0.0;
@@ -79,13 +91,16 @@ fn horizontal_tfn_blur(in: FullscreenVertexOutput) -> @location(0) vec4f {
         kernelSum += gauss;
     }
     
-    return col / kernelSum;
+    out = col / kernelSum;
+    return out;
 }
 #endif
 
 #ifdef VERTICAL
+// vertical blur pass
 @fragment
-fn vertical_tfn_blur(in:vec2f, main_tex: texture_2d, s: sampler, texel_size:vec4f, sigma_c:f32) -> vec4f {
+fn vertical_blur_pass(in: FullscreenVertexOutput) -> @location(0) vec4f {
+    var out = vec4(1.0);
     let kernelRadius = max(1.0, floor(sigma_c * 2.45));
     var col = vec4<f32>(0.0);
     var kernelSum = 0.0;
@@ -105,6 +120,7 @@ fn vertical_tfn_blur(in:vec2f, main_tex: texture_2d, s: sampler, texel_size:vec4
     let d = vec2(g.x - lambda1, g.z);
     
     
-    return select(vec4(0.,1.,0.,1.), vec4(normalize(d), sqrt(lamda1), 1.), length(d) != 0);
+    out = select(vec4(0.,1.,0.,1.), vec4(normalize(d), sqrt(lamda1), 1.), length(d) != 0);
+    return out;
 }
 #endif

@@ -39,31 +39,6 @@ fn rgb2lab(c: vec3f) -> vec3f {
     return vec3(lab.x / 100.0f, 0.5 + 0.5 * (lab.y / 127.0), 0.5 + 0.5 * (lab.z / 127.0));
 }
 
-/*
-fn calculate_eigenvector(in:vec2f, texel_size:vec2f, main_tex: texture_2d) -> vec3f{
-    let Sx = vec3(
-        1.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x, -texel_size.y)).rgb +
-        2.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x,  0.0)).rgb +
-        1.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x,  texel_size.y)).rgb +
-        -1.0f * textureSample(main_tex, in.uv + vec2(texel_size.x, -texel_size.y)).rgb +
-        -2.0f * textureSample(main_tex, in.uv + vec2(texel_size.x,  0.0)).rgb +
-        -1.0f * textureSample(main_tex, in.uv + vec2(texel_size.x,  texel_size.y)).rgb
-    ) / 4.0f;
-
-    let Sy = (
-        1.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x, -texel_size.y)).rgb +
-        2.0f * textureSample(main_tex, in.uv + vec2( 0.0, -texel_size.y)).rgb +
-        1.0f * textureSample(main_tex, in.uv + vec2( texel_size.x, -texel_size.y)).rgb +
-        -1.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x, texel_size.y)).rgb +
-        -2.0f * textureSample(main_tex, in.uv + vec2( 0.0, texel_size.y)).rgb +
-        -1.0f * textureSample(main_tex, in.uv + vec2( texel_size.x, texel_size.y)).rgb
-    ) / 4.0f;
-
-    
-    return vec3(dot(Sx, Sx), dot(Sy, Sy), dot(Sx, Sy));
-}
-*/
-
 
 @group(0) @binding(0) var screen_texture: texture_2d<f32>;
 @group(0) @binding(1) var texture_sampler: sampler;
@@ -103,6 +78,6 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
     // let main = textureSample(screen_texture, texture_sampler, uv);
     // let lab = rgb2lab(screen_fragment.rgb);
     // return vec4(lab, 1.);
-    return vec4(in.uv.x);
+    return vec4(1.);
 }
 
