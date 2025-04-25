@@ -2,6 +2,7 @@
 #import bevy_render::view::View
 
 const PI: f32 = 3.14159265359;
+
 fn gaussian(sigma: f32, pos: f32)->f32{
     return (1. / sqrt(2. * PI * sigma * sigma)) * exp(-(pos * pos) / (2. * sigma * sigma));
 }
@@ -39,7 +40,7 @@ struct DoGSettings {
 }
 
 @fragment
-fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
+fn calculate_eigenvector(in: FullscreenVertexOutput) -> @location(0) vec4f {
     var out = vec4(1.0);
 #ifdef EIGENVECTOR
     let x = 1/view.viewport.z;
