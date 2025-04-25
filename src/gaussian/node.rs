@@ -53,11 +53,9 @@ impl ViewNode for DoGNode {
         let pipeline_cache = world.resource::<PipelineCache>();
         let dog_pipeline = world.resource::<DoGPipelines>();
 
-        let err = pipeline_cache.get_render_pipeline_state(view_pipelines.rgb2lab_pipeline_id);
+        let err = pipeline_cache
+            .get_render_pipeline_state(view_pipelines.tfm_pipeline_ids.eigenvector_pipeline_id);
 
-        let _eigenvector_tfm_pipeline = pipeline_cache
-            .get_render_pipeline_state(view_pipelines.tfm_pipeline_ids.eigenvector_pipeline_id)
-            .unwrap();
         if let Some(err) = match err {
             bevy::render::render_resource::CachedPipelineState::Queued => None,
             bevy::render::render_resource::CachedPipelineState::Creating(_) => None,
@@ -117,24 +115,6 @@ impl ViewNode for DoGNode {
         // Fetch the framebuffer textures.
         let postprocess = view_target.post_process_write();
         let (source, destination) = (postprocess.source, postprocess.destination);
-        // I should get the prepared pipelines
-        // textures
-        // (views)
-        // bind groups
-        //
-        // Then I create functions for each pass (except tfm and fdog+aa will be brought together I think)
-        //
-        //
-        // In each of those passes I will create the postprocess bind group with the sampler from
-        // the pipeline
-        // Then I will set the textures accordingly.
-        //
-        // then I will do the draw calls
-
-        // The pipeline cache is a cache of all previously created pipelines.
-        // It is required to avoid creating a new pipeline each frame,
-        // which is expensive due to shader compilation.
-        // Get the settings uniform binding
         let view_uniforms = world.resource::<ViewUniforms>();
         let Some(view_uniforms) = view_uniforms.uniforms.binding() else {
             println!("view uniforms");
@@ -160,8 +140,8 @@ impl ViewNode for DoGNode {
         let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
             label: Some("rgb2lab_pass"),
             color_attachments: &[Some(RenderPassColorAttachment {
-                view: &destination,
-                // view: &textures.lab_texture.default_view,
+                // view: &destination,
+                view: &textures.lab_texture.default_view,
                 resolve_target: None,
                 ops: Operations::default(),
             })],
@@ -178,6 +158,11 @@ impl ViewNode for DoGNode {
         );
         // render_pass.set_bind_group(1, &view_smaa_bind_groups.edge_detection_bind_group, &[]);
         render_pass.draw(0..3, 0..1);
+
+        // PASS 2
+        let _eigenvector_tfm_pipeline = pipeline_cache
+            .get_render_pipeline_state(view_pipelines.tfm_pipeline_ids.eigenvector_pipeline_id)
+            .unwrap();
 
         Ok(())
     }
