@@ -1,0 +1,8 @@
+.bacon-locations
+.cargo/
+Cargo.lock
+assets/*
+!assets/shaders/
+!assets/textures/
+demo.blend
+target/

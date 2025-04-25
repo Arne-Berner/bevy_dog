@@ -1,0 +1,60 @@
+fn luminance(color: vec3f) -> f32 {
+    return dot(color, float3(0.299f, 0.587f, 0.114f));
+}
+
+// Color conversions from https://gist.github.com/mattatz/44f081cac87e2f7c8980
+fn rgb2xyz(c: vec3f) -> vec3f{
+    var tmp = vec3(0.);
+
+    tmp.x = (c.r > 0.04045) ? pow((c.r + 0.055) / 1.055, 2.4) : c.r / 12.92;
+    tmp.y = (c.g > 0.04045) ? pow((c.g + 0.055) / 1.055, 2.4) : c.g / 12.92;
+    tmp.z = (c.b > 0.04045) ? pow((c.b + 0.055) / 1.055, 2.4) : c.b / 12.92;
+    
+    let mat: mat3x3<f32> = mat3x3<f32>(
+        0.4124, 0.3576, 0.1805,
+        0.2126, 0.7152, 0.0722,
+        0.0193, 0.1192, 0.9505
+    );
+
+    return 100.0 * mul(tmp, mat);
+}
+
+fn xyz2lab(c:vec3f) -> vec3f {
+    let n = c / vec3(95.047, 100, 108.883);
+    var v = vec3(0.);
+
+    v.x = (n.x > 0.008856) ? pow(n.x, 1.0 / 3.0) : (7.787 * n.x) + (16.0 / 116.0);
+    v.y = (n.y > 0.008856) ? pow(n.y, 1.0 / 3.0) : (7.787 * n.y) + (16.0 / 116.0);
+    v.z = (n.z > 0.008856) ? pow(n.z, 1.0 / 3.0) : (7.787 * n.z) + (16.0 / 116.0);
+
+    return vec3((116.0 * v.y) - 16.0, 500.0 * (v.x - v.y), 200.0 * (v.y - v.z));
+}
+
+fn rgb2lab(c: vec3f) -> vec3 {
+    let lab = xyz2lab(rgb2xyz(c));
+
+    return vec3(lab.x / 100.0f, 0.5 + 0.5 * (lab.y / 127.0), 0.5 + 0.5 * (lab.z / 127.0));
+}
+
+fn calculate_eigenvector(in:vec2f, texel_size:vec2f, main_tex: texture_2d) -> vec3f{
+    let Sx = vec3(
+        1.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x, -texel_size.y)).rgb +
+        2.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x,  0.0)).rgb +
+        1.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x,  texel_size.y)).rgb +
+        -1.0f * textureSample(main_tex, in.uv + vec2(texel_size.x, -texel_size.y)).rgb +
+        -2.0f * textureSample(main_tex, in.uv + vec2(texel_size.x,  0.0)).rgb +
+        -1.0f * textureSample(main_tex, in.uv + vec2(texel_size.x,  texel_size.y)).rgb
+    ) / 4.0f;
+
+    float3 Sy = (
+        1.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x, -texel_size.y)).rgb +
+        2.0f * textureSample(main_tex, in.uv + vec2( 0.0, -texel_size.y)).rgb +
+        1.0f * textureSample(main_tex, in.uv + vec2( texel_size.x, -texel_size.y)).rgb +
+        -1.0f * textureSample(main_tex, in.uv + vec2(-texel_size.x, texel_size.y)).rgb +
+        -2.0f * textureSample(main_tex, in.uv + vec2( 0.0, texel_size.y)).rgb +
+        -1.0f * textureSample(main_tex, in.uv + vec2( texel_size.x, texel_size.y)).rgb
+    ) / 4.0f;
+
+    
+    return vec3(dot(Sx, Sx), dot(Sy, Sy), dot(Sx, Sy));
+}
