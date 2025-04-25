@@ -72,7 +72,7 @@ impl Plugin for DoGPlugin {
         load_internal_asset!(
             app,
             TFM_SHADER_HANDLE,
-            "../../assets/shaders/tfm.wgsl",
+            "shaders/tfm.wgsl",
             Shader::from_wgsl
         );
 
@@ -130,6 +130,7 @@ impl Plugin for DoGPlugin {
     fn finish(&self, app: &mut App) {
         // We need to get the render app from the main app
         let Some(render_app) = app.get_sub_app_mut(RenderApp) else {
+            println!("could not get renderapp");
             return;
         };
 

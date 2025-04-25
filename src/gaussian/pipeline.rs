@@ -411,8 +411,6 @@ impl SpecializedRenderPipeline for DoGPipeline {
     type Key = DoGPipelineKeys;
 
     fn specialize(&self, key: Self::Key) -> RenderPipelineDescriptor {
-        // let shader_defs = vec![preset.shader_def()];
-
         let entry_point = if key.first {
             "first_gaussian_blur_pass".into()
         } else {

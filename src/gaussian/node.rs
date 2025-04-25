@@ -53,6 +53,15 @@ impl ViewNode for DoGNode {
         let pipeline_cache = world.resource::<PipelineCache>();
         let dog_pipeline = world.resource::<DoGPipelines>();
 
+        let rgb2lab_pipeline = pipeline_cache
+            .get_render_pipeline(view_pipelines.rgb2lab_pipeline_id)
+            .unwrap();
+
+        let vertical_tfm_pipeline = pipeline_cache
+            .get_render_pipeline_state(view_pipelines.tfm_pipeline_ids.vertical_pipeline_id)
+            .unwrap();
+        vertical_tfm_pipeline.
+        /*
         // Fetch the render pipelines.
         let (
             Some(rgb2lab_pipeline),
@@ -65,7 +74,6 @@ impl ViewNode for DoGNode {
             Some(aa_pipeline),
             Some(blend_pipeline),
         ) = (
-            pipeline_cache.get_render_pipeline(view_pipelines.rgb2lab_pipeline_id),
             pipeline_cache
                 .get_render_pipeline(view_pipelines.tfm_pipeline_ids.vertical_pipeline_id),
             pipeline_cache
@@ -78,8 +86,10 @@ impl ViewNode for DoGNode {
             pipeline_cache.get_render_pipeline(view_pipelines.blend_pipeline_id),
         )
         else {
+            println!("cache not workng");
             return Ok(());
         };
+            */
 
         // Fetch the framebuffer textures.
         let postprocess = view_target.post_process_write();
@@ -102,12 +112,15 @@ impl ViewNode for DoGNode {
         // It is required to avoid creating a new pipeline each frame,
         // which is expensive due to shader compilation.
         // Get the settings uniform binding
+        println!("inside node");
         let view_uniforms = world.resource::<ViewUniforms>();
         let Some(view_uniforms) = view_uniforms.uniforms.binding() else {
+            println!("view uniforms");
             return Ok(());
         };
         let settings_uniforms = world.resource::<ComponentUniforms<DoGSettings>>();
         let Some(settings_binding) = settings_uniforms.uniforms().binding() else {
+            println!("settings binding");
             return Ok(());
         };
 
