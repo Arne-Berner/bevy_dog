@@ -7,11 +7,6 @@ fn gaussian(sigma: f32, pos: f32)->f32{
     return (1. / sqrt(2. * PI * sigma * sigma)) * exp(-(pos * pos) / (2. * sigma * sigma));
 }
 
-@group(0) @binding(0) var screen_texture: texture_2d<f32>;
-@group(0) @binding(1) var texture_sampler: sampler;
-@group(0) @binding(2) var<uniform> view: View;
-@group(0) @binding(3) var<uniform> config: DoGSettings;
-
 struct DoGSettings {
     thresholding: i32,
     blend_mode: i32,
@@ -39,6 +34,12 @@ struct DoGSettings {
     thresholds: vec4f,
 }
 
+@group(0) @binding(0) var screen_texture: texture_2d<f32>;
+@group(0) @binding(1) var texture_sampler: sampler;
+@group(0) @binding(2) var<uniform> view: View;
+@group(0) @binding(3) var<uniform> config: DoGSettings;
+
+
 @fragment
 fn calculate_eigenvector(in: FullscreenVertexOutput) -> @location(0) vec4f {
     var out = vec4(1.0);
@@ -46,12 +47,12 @@ fn calculate_eigenvector(in: FullscreenVertexOutput) -> @location(0) vec4f {
     let y = 1/view.viewport.w;
 
     let Sx = vec3((
-        1.0f * textureSample(screen_texture, in.uv + vec2(-x, -y)).rgb +
-        2.0f * textureSample(screen_texture, in.uv + vec2(-x,  0.0)).rgb +
-        1.0f * textureSample(screen_texture, in.uv + vec2(-x,  y)).rgb +
-        -1.0f * textureSample(screen_texture, in.uv + vec2(x, -y)).rgb +
-        -2.0f * textureSample(screen_texture, in.uv + vec2(x,  0.0)).rgb +
-        -1.0f * textureSample(screen_texture, in.uv + vec2(x,  y)).rgb
+        1.0f * textureSample(screen_texture, sampler, in.uv + vec2(-x, -y)).rgb +
+        2.0f * textureSample(screen_texture, sampler, in.uv + vec2(-x,  0.0)).rgb +
+        1.0f * textureSample(screen_texture, sampler, in.uv + vec2(-x,  y)).rgb +
+        -1.0f * textureSample(screen_texture, sampler, in.uv + vec2(x, -y)).rgb +
+        -2.0f * textureSample(screen_texture, sampler, in.uv + vec2(x,  0.0)).rgb +
+        -1.0f * textureSample(screen_texture, sampler,in.uv + vec2(x,  y)).rgb
     ) / 4.0f);
 
 /*
