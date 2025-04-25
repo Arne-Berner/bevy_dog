@@ -319,24 +319,24 @@ impl SpecializedRenderPipeline for TFMPipeline {
     fn specialize(&self, key: Self::Key) -> RenderPipelineDescriptor {
         // let shader_defs = vec![preset.shader_def()];
 
+        let label = match key {
+            TFMPipelineKeys::Eigenvector => Some("Eigenvector".into()),
+            TFMPipelineKeys::Vertical => Some("VerticalPass".into()),
+            TFMPipelineKeys::Horizontal => Some("HorizontalPass".into()),
+        };
+
         let entry_point = match key {
-            TFMPipelineKeys::Eigenvector => "fragment".into(),
+            TFMPipelineKeys::Eigenvector => "calculate_eigenvector".into(),
             TFMPipelineKeys::Vertical => "vertical_blur_pass".into(),
             TFMPipelineKeys::Horizontal => "horizontal_blur_pass".into(),
         };
-        // I don't think I have a couple of different ones
-        // Those are the defs shown in the shader to use special parses
+
         let shader_defs = match key {
             TFMPipelineKeys::Eigenvector => vec!["EIGENVECTOR".into()],
             TFMPipelineKeys::Vertical => vec!["VERTICAL".into()],
             TFMPipelineKeys::Horizontal => vec!["HORIZONTAL".into()],
         };
 
-        let label = match key {
-            TFMPipelineKeys::Eigenvector => Some("Eigenvector".into()),
-            TFMPipelineKeys::Vertical => Some("VerticalPass".into()),
-            TFMPipelineKeys::Horizontal => Some("HorizontalPass".into()),
-        };
         println!("entry_point:{:?}", entry_point);
 
         RenderPipelineDescriptor {
