@@ -22,6 +22,7 @@ pub const RGB2LAB_SHADER_HANDLE: Handle<Shader> =
     weak_handle!("ce20ba6c-9bd1-4a62-bfe8-ba51750dbdc3");
 pub const TFM_SHADER_HANDLE: Handle<Shader> = weak_handle!("34197afe-e54f-4d38-9fc6-7c467524cc59");
 pub const FDOG_SHADER_HANDLE: Handle<Shader> = weak_handle!("8588af6b-9061-4514-bb16-95deb4e06818");
+pub const AA_SHADER_HANDLE: Handle<Shader> = weak_handle!("9d4d296b-cb2d-4e25-8125-c6854184f959");
 pub const DOG_SHADER_HANDLE: Handle<Shader> = weak_handle!("bedbea43-8967-4cdd-95b6-d3a4d630c436");
 pub const BLEND_SHADER_HANDLE: Handle<Shader> =
     weak_handle!("b86e54d8-858a-41e5-84d5-62a34f455a77");
@@ -72,7 +73,7 @@ impl Plugin for DoGPlugin {
         load_internal_asset!(
             app,
             TFM_SHADER_HANDLE,
-            "shaders/tfm.wgsl",
+            "../../assets/shaders/tfm.wgsl",
             Shader::from_wgsl
         );
 
@@ -82,12 +83,21 @@ impl Plugin for DoGPlugin {
             "../../assets/shaders/fdog.wgsl",
             Shader::from_wgsl
         );
+
         load_internal_asset!(
             app,
             DOG_SHADER_HANDLE,
             "../../assets/shaders/dog.wgsl",
             Shader::from_wgsl
         );
+
+        load_internal_asset!(
+            app,
+            AA_SHADER_HANDLE,
+            "../../assets/shaders/aa.wgsl",
+            Shader::from_wgsl
+        );
+
         load_internal_asset!(
             app,
             BLEND_SHADER_HANDLE,

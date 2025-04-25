@@ -1,5 +1,6 @@
 use super::plugin::{
-    DOG_SHADER_HANDLE, FDOG_SHADER_HANDLE, RGB2LAB_SHADER_HANDLE, TFM_SHADER_HANDLE,
+    AA_SHADER_HANDLE, BLEND_SHADER_HANDLE, DOG_SHADER_HANDLE, FDOG_SHADER_HANDLE,
+    RGB2LAB_SHADER_HANDLE, TFM_SHADER_HANDLE,
 };
 use crate::gaussian::settings::DoGSettings;
 use bevy::render::render_resource::{
@@ -59,6 +60,7 @@ pub struct TFMPipeline {
 
 #[derive(Component)]
 pub struct TFMPipelineIDs {
+    pub eigenvector_pipeline_id: CachedRenderPipelineId,
     pub horizontal_pipeline_id: CachedRenderPipelineId,
     pub vertical_pipeline_id: CachedRenderPipelineId,
 }
@@ -242,7 +244,7 @@ impl FromWorld for DoGPipelines {
             layout: vec![postprocess_bind_group_layout.clone()],
             vertex: fullscreen_shader_vertex_state(),
             fragment: Some(FragmentState {
-                shader: FDOG_SHADER_HANDLE,
+                shader: AA_SHADER_HANDLE,
                 shader_defs: vec![],
                 entry_point: "fragment".into(),
                 targets: vec![Some(ColorTargetState {
@@ -265,14 +267,12 @@ impl FromWorld for DoGPipelines {
             pipeline_id,
         };
 
-        let shader = world.load_asset("shaders/aa.wgsl");
-
         let pipeline_id = pipeline_cache.queue_render_pipeline(RenderPipelineDescriptor {
             label: Some("blending_pipeline".into()),
             layout: vec![postprocess_bind_group_layout.clone()],
             vertex: fullscreen_shader_vertex_state(),
             fragment: Some(FragmentState {
-                shader,
+                shader: BLEND_SHADER_HANDLE,
                 shader_defs: vec![],
                 entry_point: "fragment".into(),
                 targets: vec![Some(ColorTargetState {
@@ -307,8 +307,10 @@ impl FromWorld for DoGPipelines {
 }
 
 #[derive(PartialEq, Eq, Hash, Clone)]
-pub struct TFMPipelineKeys {
-    vertical: bool,
+pub enum TFMPipelineKeys {
+    Eigenvector,
+    Vertical,
+    Horizontal,
 }
 
 impl SpecializedRenderPipeline for TFMPipeline {
@@ -317,18 +319,12 @@ impl SpecializedRenderPipeline for TFMPipeline {
     fn specialize(&self, key: Self::Key) -> RenderPipelineDescriptor {
         // let shader_defs = vec![preset.shader_def()];
 
-        let entry_point = if key.vertical {
-            "vertical".into()
-        } else {
-            "horizontal".into()
-        };
-
         // I don't think I have a couple of different ones
         // Those are the defs shown in the shader to use special parses
-        let shader_defs = if key.vertical {
-            vec!["VERTICAL".into()]
-        } else {
-            vec!["HORIZONTAL".into()]
+        let shader_defs = match key {
+            TFMPipelineKeys::Eigenvector => vec!["EIGENVECTOR".into()],
+            TFMPipelineKeys::Vertical => vec!["VERTICAL".into()],
+            TFMPipelineKeys::Horizontal => vec!["HORIZONTAL".into()],
         };
 
         RenderPipelineDescriptor {
@@ -338,7 +334,7 @@ impl SpecializedRenderPipeline for TFMPipeline {
             fragment: Some(FragmentState {
                 shader: TFM_SHADER_HANDLE,
                 shader_defs,
-                entry_point,
+                entry_point: "fragment".into(),
                 targets: vec![Some(ColorTargetState {
                     format: TextureFormat::bevy_default(),
                     blend: None,
@@ -448,19 +444,6 @@ impl SpecializedRenderPipeline for DoGPipeline {
     }
 }
 
-#[derive(Component)]
-pub struct GaussianPipelineIds {
-    pub rgb2lab: CachedRenderPipelineId,
-    pub vertical: CachedRenderPipelineId,
-    pub horizontal: CachedRenderPipelineId,
-    pub fdog_first: CachedRenderPipelineId,
-    pub fdog_second: CachedRenderPipelineId,
-    pub dog_first: CachedRenderPipelineId,
-    pub dog_second: CachedRenderPipelineId,
-    pub anti_alliasing: CachedRenderPipelineId,
-    pub blend: CachedRenderPipelineId,
-}
-
 #[derive(Resource, Default)]
 pub struct DoGSpecializedRenderPipelines {
     tfm: SpecializedRenderPipelines<TFMPipeline>,
@@ -477,16 +460,23 @@ pub fn prepare_gaussian_pipelines(
 ) {
     for (entity, _dog) in &views {
         let rgb2lab_pipeline_id = dog_pipelines.rgba2lab.pipeline_id;
+
+        let eigenvector_pipeline_id = specialized_render_pipelines.tfm.specialize(
+            &pipeline_cache,
+            &dog_pipelines.tfm,
+            TFMPipelineKeys::Eigenvector,
+        );
+
         let vertical_pipeline_id = specialized_render_pipelines.tfm.specialize(
             &pipeline_cache,
             &dog_pipelines.tfm,
-            TFMPipelineKeys { vertical: true },
+            TFMPipelineKeys::Vertical,
         );
 
         let horizontal_pipeline_id = specialized_render_pipelines.tfm.specialize(
             &pipeline_cache,
             &dog_pipelines.tfm,
-            TFMPipelineKeys { vertical: false },
+            TFMPipelineKeys::Horizontal,
         );
 
         let first_fdog = specialized_render_pipelines.fdog.specialize(
@@ -519,6 +509,7 @@ pub fn prepare_gaussian_pipelines(
         commands.entity(entity).insert(GaussianPipelineIDs {
             rgb2lab_pipeline_id,
             tfm_pipeline_ids: TFMPipelineIDs {
+                eigenvector_pipeline_id,
                 vertical_pipeline_id,
                 horizontal_pipeline_id,
             },

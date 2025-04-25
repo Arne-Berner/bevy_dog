@@ -67,8 +67,8 @@ fn calculate_eigenvector(in:vec2f, texel_size:vec2f, main_tex: texture_2d) -> ve
 
 @group(0) @binding(0) var screen_texture: texture_2d<f32>;
 @group(0) @binding(1) var texture_sampler: sampler;
-@group(0) @binding(3) var<uniform> view: View;
-@group(0) @binding(4) var<uniform> config: DoGSettings;
+@group(0) @binding(2) var<uniform> view: View;
+@group(0) @binding(3) var<uniform> config: DoGSettings;
 
 struct DoGSettings {
     thresholding: i32,
@@ -103,6 +103,6 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
     // let main = textureSample(screen_texture, texture_sampler, uv);
     // let lab = rgb2lab(screen_fragment.rgb);
     // return vec4(lab, 1.);
-    return vec4(1.);
+    return vec4(in.uv.x);
 }
 

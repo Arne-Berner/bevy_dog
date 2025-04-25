@@ -57,10 +57,10 @@ impl ViewNode for DoGNode {
             .get_render_pipeline(view_pipelines.rgb2lab_pipeline_id)
             .unwrap();
 
-        let vertical_tfm_pipeline = pipeline_cache
-            .get_render_pipeline_state(view_pipelines.tfm_pipeline_ids.vertical_pipeline_id)
-            .unwrap();
-        vertical_tfm_pipeline.
+        let eigenvector_tfm_pipeline_state = pipeline_cache
+            .get_render_pipeline_state(view_pipelines.tfm_pipeline_ids.eigenvector_pipeline_id);
+        println!("{:?}", vertical_tfm_pipeline_state);
+        // let vertical_tfm_pipeline = vertical_tfm_pipeline_state.unwrap();
         /*
         // Fetch the render pipelines.
         let (
