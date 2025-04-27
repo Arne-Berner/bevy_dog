@@ -1,15 +1,14 @@
 use bevy::{
-    core_pipeline::{
-        fxaa::{Fxaa, Sensitivity},
-        prepass::{DepthPrepass, NormalPrepass},
-    },
     log::{Level, LogPlugin},
     prelude::*,
 };
 mod debug_ui;
 mod gaussian;
 // use debug_ui::DebugUIPlugin;
-use gaussian::{plugin::DoGPlugin, settings::DoGSettings};
+use gaussian::{
+    plugin::DoGPlugin,
+    settings::{DoGSettings, PassesSettings},
+};
 
 fn main() {
     App::new()
@@ -74,12 +73,13 @@ fn setup(
         },
         */
         DoGSettings::default(),
+        PassesSettings::default(),
     ));
 
     // light
     commands.spawn((
         SpotLight {
-            intensity: 30_000_000.,
+            intensity: 180_000_000.,
             // shadows_enabled: true,
             inner_angle: 0.0,
             outer_angle: 0.8,

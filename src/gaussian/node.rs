@@ -1,7 +1,7 @@
 use super::{
     pipeline::{DoGPipelines, GaussianPipelineIDs},
     plugin::CROSSHATCH_TEXTURE_HANDLE,
-    settings::DoGSettings,
+    settings::{DoGSettings, PassesSettings},
     textures::DoGTextures,
 };
 use bevy::{
@@ -29,6 +29,7 @@ impl ViewNode for DoGNode {
         &'static ViewTarget,
         &'static ViewUniformOffset,
         &'static DoGSettings,
+        &'static PassesSettings,
         &'static DynamicUniformIndex<DoGSettings>,
         &'static GaussianPipelineIDs,
         &'static DoGTextures,
@@ -43,6 +44,7 @@ impl ViewNode for DoGNode {
             view_target,
             view_uniform_offset,
             _post_process_settings,
+            passes_settings,
             settings_index,
             view_pipelines,
             textures,
@@ -53,7 +55,7 @@ impl ViewNode for DoGNode {
         let pipeline_cache = world.resource::<PipelineCache>();
         let dog_pipeline = world.resource::<DoGPipelines>();
 
-        let err = pipeline_cache.get_render_pipeline_state(view_pipelines.blend_pipeline_id);
+        let err = pipeline_cache.get_render_pipeline_state(view_pipelines.dog_pipeline_ids.second);
 
         if let Some(err) = match err {
             bevy::render::render_resource::CachedPipelineState::Queued => None,
@@ -77,6 +79,7 @@ impl ViewNode for DoGNode {
                 println!("{:?}", state.inner);
             }
         }
+
         let rgb2lab_pipeline = pipeline_cache
             .get_render_pipeline(view_pipelines.rgb2lab_pipeline_id)
             .unwrap();
@@ -94,6 +97,12 @@ impl ViewNode for DoGNode {
             .unwrap();
         let second_fdog_pipeline = pipeline_cache
             .get_render_pipeline(view_pipelines.fdog_pipeline_ids.second)
+            .unwrap();
+        let first_dog_pipeline = pipeline_cache
+            .get_render_pipeline(view_pipelines.dog_pipeline_ids.first)
+            .unwrap();
+        let second_dog_pipeline = pipeline_cache
+            .get_render_pipeline(view_pipelines.dog_pipeline_ids.second)
             .unwrap();
         let aa_pipeline = pipeline_cache
             .get_render_pipeline(view_pipelines.aa_pipeline_id)
@@ -150,214 +159,296 @@ impl ViewNode for DoGNode {
             render_pass.draw(0..3, 0..1);
         }
 
-        // PASS 1 Eigenvector
-        {
-            let postprocess_bind_group = render_context.render_device().create_bind_group(
-                "eigenvector_process_bind_group",
-                &dog_pipeline.tfm.postprocess_bind_group_layout,
-                &BindGroupEntries::sequential((
-                    &textures.lab_texture.default_view,
-                    &dog_pipeline.tfm.sampler,
-                    view_uniforms.clone(),
-                    settings_binding.clone(),
-                )),
-            );
+        if (passes_settings.aa == 1) && (passes_settings.tfm == 1) {
+            // PASS 1 Eigenvector
+            {
+                let postprocess_bind_group = render_context.render_device().create_bind_group(
+                    "eigenvector_process_bind_group",
+                    &dog_pipeline.tfm.postprocess_bind_group_layout,
+                    &BindGroupEntries::sequential((
+                        &textures.lab_texture.default_view,
+                        &dog_pipeline.tfm.sampler,
+                        view_uniforms.clone(),
+                        settings_binding.clone(),
+                    )),
+                );
 
-            let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-                label: Some("eigenvector_pass"),
-                color_attachments: &[Some(RenderPassColorAttachment {
-                    view: &textures.eigen_texture.default_view,
-                    resolve_target: None,
-                    ops: Operations::default(),
-                })],
-                depth_stencil_attachment: None,
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            });
+                let mut render_pass =
+                    render_context.begin_tracked_render_pass(RenderPassDescriptor {
+                        label: Some("eigenvector_pass"),
+                        color_attachments: &[Some(RenderPassColorAttachment {
+                            view: &textures.eigen_texture.default_view,
+                            resolve_target: None,
+                            ops: Operations::default(),
+                        })],
+                        depth_stencil_attachment: None,
+                        timestamp_writes: None,
+                        occlusion_query_set: None,
+                    });
 
-            render_pass.set_render_pipeline(eigenvector_pipeline);
-            render_pass.set_bind_group(
-                0,
-                &postprocess_bind_group,
-                &[view_uniform_offset.offset, settings_index.index()],
-            );
-            // render_pass.set_bind_group(1, &view_smaa_bind_groups.edge_detection_bind_group, &[]);
-            render_pass.draw(0..3, 0..1);
+                render_pass.set_render_pipeline(eigenvector_pipeline);
+                render_pass.set_bind_group(
+                    0,
+                    &postprocess_bind_group,
+                    &[view_uniform_offset.offset, settings_index.index()],
+                );
+                // render_pass.set_bind_group(1, &view_smaa_bind_groups.edge_detection_bind_group, &[]);
+                render_pass.draw(0..3, 0..1);
+            }
+
+            // PASS 2 Vertical
+            {
+                let postprocess_bind_group = render_context.render_device().create_bind_group(
+                    "horizontal_process_bind_group",
+                    &dog_pipeline.tfm.postprocess_bind_group_layout,
+                    &BindGroupEntries::sequential((
+                        &textures.eigen_texture.default_view,
+                        &dog_pipeline.tfm.sampler,
+                        view_uniforms.clone(),
+                        settings_binding.clone(),
+                    )),
+                );
+
+                let mut render_pass =
+                    render_context.begin_tracked_render_pass(RenderPassDescriptor {
+                        label: Some("eigenvector_pass"),
+                        color_attachments: &[Some(RenderPassColorAttachment {
+                            view: &textures.horizontal_texture.default_view,
+                            resolve_target: None,
+                            ops: Operations::default(),
+                        })],
+                        depth_stencil_attachment: None,
+                        timestamp_writes: None,
+                        occlusion_query_set: None,
+                    });
+
+                render_pass.set_render_pipeline(horizontal_pipeline);
+                render_pass.set_bind_group(
+                    0,
+                    &postprocess_bind_group,
+                    &[view_uniform_offset.offset, settings_index.index()],
+                );
+                // render_pass.set_bind_group(1, &view_smaa_bind_groups.edge_detection_bind_group, &[]);
+                render_pass.draw(0..3, 0..1);
+            }
+
+            // PASS 3 Vertical + bringing it together
+            {
+                let postprocess_bind_group = render_context.render_device().create_bind_group(
+                    "horizontal_process_bind_group",
+                    &dog_pipeline.tfm.postprocess_bind_group_layout,
+                    &BindGroupEntries::sequential((
+                        &textures.horizontal_texture.default_view,
+                        &dog_pipeline.tfm.sampler,
+                        view_uniforms.clone(),
+                        settings_binding.clone(),
+                    )),
+                );
+
+                let mut render_pass =
+                    render_context.begin_tracked_render_pass(RenderPassDescriptor {
+                        label: Some("vertical_pass"),
+                        color_attachments: &[Some(RenderPassColorAttachment {
+                            view: &textures.vertical_texture.default_view,
+                            resolve_target: None,
+                            ops: Operations::default(),
+                        })],
+                        depth_stencil_attachment: None,
+                        timestamp_writes: None,
+                        occlusion_query_set: None,
+                    });
+
+                render_pass.set_render_pipeline(vertical_pipeline);
+                render_pass.set_bind_group(
+                    0,
+                    &postprocess_bind_group,
+                    &[view_uniform_offset.offset, settings_index.index()],
+                );
+                // render_pass.set_bind_group(1, &view_smaa_bind_groups.edge_detection_bind_group, &[]);
+                render_pass.draw(0..3, 0..1);
+            }
         }
 
-        // PASS 2 Vertical
-        {
-            let postprocess_bind_group = render_context.render_device().create_bind_group(
-                "horizontal_process_bind_group",
-                &dog_pipeline.tfm.postprocess_bind_group_layout,
-                &BindGroupEntries::sequential((
-                    &textures.eigen_texture.default_view,
-                    &dog_pipeline.tfm.sampler,
-                    view_uniforms.clone(),
-                    settings_binding.clone(),
-                )),
-            );
+        if passes_settings.tfm == 1 {
+            // PASS 4 first FDOG blur
+            {
+                let postprocess_bind_group = render_context.render_device().create_bind_group(
+                    "horizontal_process_bind_group",
+                    &dog_pipeline.fdog.postprocess_bind_group_layout,
+                    &BindGroupEntries::sequential((
+                        &textures.lab_texture.default_view,
+                        &dog_pipeline.fdog.sampler,
+                        view_uniforms.clone(),
+                        settings_binding.clone(),
+                    )),
+                );
 
-            let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-                label: Some("eigenvector_pass"),
-                color_attachments: &[Some(RenderPassColorAttachment {
-                    view: &textures.horizontal_texture.default_view,
-                    resolve_target: None,
-                    ops: Operations::default(),
-                })],
-                depth_stencil_attachment: None,
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            });
+                let mut render_pass =
+                    render_context.begin_tracked_render_pass(RenderPassDescriptor {
+                        label: Some("first fdog pass"),
+                        color_attachments: &[Some(RenderPassColorAttachment {
+                            view: &textures.first_dog_texture.default_view,
+                            resolve_target: None,
+                            ops: Operations::default(),
+                        })],
+                        depth_stencil_attachment: None,
+                        timestamp_writes: None,
+                        occlusion_query_set: None,
+                    });
 
-            render_pass.set_render_pipeline(horizontal_pipeline);
-            render_pass.set_bind_group(
-                0,
-                &postprocess_bind_group,
-                &[view_uniform_offset.offset, settings_index.index()],
-            );
-            // render_pass.set_bind_group(1, &view_smaa_bind_groups.edge_detection_bind_group, &[]);
-            render_pass.draw(0..3, 0..1);
+                render_pass.set_render_pipeline(first_fdog_pipeline);
+                render_pass.set_bind_group(
+                    0,
+                    &postprocess_bind_group,
+                    &[view_uniform_offset.offset, settings_index.index()],
+                );
+                render_pass.set_bind_group(1, &bind_groups.tfm_bind_group, &[]);
+                render_pass.draw(0..3, 0..1);
+            }
+
+            // PASS 5 second FDOG blur
+            {
+                let postprocess_bind_group = render_context.render_device().create_bind_group(
+                    "second_fdog_bind_group",
+                    &dog_pipeline.fdog.postprocess_bind_group_layout,
+                    &BindGroupEntries::sequential((
+                        &textures.first_dog_texture.default_view,
+                        &dog_pipeline.fdog.sampler,
+                        view_uniforms.clone(),
+                        settings_binding.clone(),
+                    )),
+                );
+
+                let mut render_pass =
+                    render_context.begin_tracked_render_pass(RenderPassDescriptor {
+                        label: Some("second fdog pass"),
+                        color_attachments: &[Some(RenderPassColorAttachment {
+                            view: &textures.second_dog_texture.default_view,
+                            resolve_target: None,
+                            ops: Operations::default(),
+                        })],
+                        depth_stencil_attachment: None,
+                        timestamp_writes: None,
+                        occlusion_query_set: None,
+                    });
+
+                render_pass.set_render_pipeline(second_fdog_pipeline);
+                render_pass.set_bind_group(
+                    0,
+                    &postprocess_bind_group,
+                    &[view_uniform_offset.offset, settings_index.index()],
+                );
+                render_pass.set_bind_group(1, &bind_groups.tfm_bind_group, &[]);
+                render_pass.draw(0..3, 0..1);
+            }
+        } else {
+            // PASS 4 first DOG blur
+            {
+                let postprocess_bind_group = render_context.render_device().create_bind_group(
+                    "horizontal_process_bind_group",
+                    &dog_pipeline.dog.postprocess_bind_group_layout,
+                    &BindGroupEntries::sequential((
+                        &textures.lab_texture.default_view,
+                        &dog_pipeline.dog.sampler,
+                        view_uniforms.clone(),
+                        settings_binding.clone(),
+                    )),
+                );
+
+                let mut render_pass =
+                    render_context.begin_tracked_render_pass(RenderPassDescriptor {
+                        label: Some("first dog pass"),
+                        color_attachments: &[Some(RenderPassColorAttachment {
+                            view: &textures.first_dog_texture.default_view,
+                            resolve_target: None,
+                            ops: Operations::default(),
+                        })],
+                        depth_stencil_attachment: None,
+                        timestamp_writes: None,
+                        occlusion_query_set: None,
+                    });
+
+                render_pass.set_render_pipeline(first_dog_pipeline);
+                render_pass.set_bind_group(
+                    0,
+                    &postprocess_bind_group,
+                    &[view_uniform_offset.offset, settings_index.index()],
+                );
+                render_pass.draw(0..3, 0..1);
+            }
+
+            // PASS 5 second DOG blur
+            {
+                let postprocess_bind_group = render_context.render_device().create_bind_group(
+                    "second_dog_bind_group",
+                    &dog_pipeline.dog.postprocess_bind_group_layout,
+                    &BindGroupEntries::sequential((
+                        &textures.first_dog_texture.default_view,
+                        &dog_pipeline.dog.sampler,
+                        view_uniforms.clone(),
+                        settings_binding.clone(),
+                    )),
+                );
+
+                let mut render_pass =
+                    render_context.begin_tracked_render_pass(RenderPassDescriptor {
+                        label: Some("second dog pass"),
+                        color_attachments: &[Some(RenderPassColorAttachment {
+                            view: &textures.second_dog_texture.default_view,
+                            resolve_target: None,
+                            ops: Operations::default(),
+                        })],
+                        depth_stencil_attachment: None,
+                        timestamp_writes: None,
+                        occlusion_query_set: None,
+                    });
+
+                render_pass.set_render_pipeline(second_dog_pipeline);
+                render_pass.set_bind_group(
+                    0,
+                    &postprocess_bind_group,
+                    &[view_uniform_offset.offset, settings_index.index()],
+                );
+                render_pass.draw(0..3, 0..1);
+            }
         }
 
-        // PASS 3 Vertical + bringing it together
-        {
-            let postprocess_bind_group = render_context.render_device().create_bind_group(
-                "horizontal_process_bind_group",
-                &dog_pipeline.tfm.postprocess_bind_group_layout,
-                &BindGroupEntries::sequential((
-                    &textures.horizontal_texture.default_view,
-                    &dog_pipeline.tfm.sampler,
-                    view_uniforms.clone(),
-                    settings_binding.clone(),
-                )),
-            );
+        if passes_settings.aa == 1 {
+            // PASS 6 AA
+            {
+                let postprocess_bind_group = render_context.render_device().create_bind_group(
+                    "aa_bind_group",
+                    &dog_pipeline.aa.postprocess_bind_group_layout,
+                    &BindGroupEntries::sequential((
+                        &textures.second_dog_texture.default_view,
+                        &dog_pipeline.aa.sampler,
+                        view_uniforms.clone(),
+                        settings_binding.clone(),
+                    )),
+                );
 
-            let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-                label: Some("vertical_pass"),
-                color_attachments: &[Some(RenderPassColorAttachment {
-                    view: &textures.vertical_texture.default_view,
-                    resolve_target: None,
-                    ops: Operations::default(),
-                })],
-                depth_stencil_attachment: None,
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            });
+                let mut render_pass =
+                    render_context.begin_tracked_render_pass(RenderPassDescriptor {
+                        label: Some("aa pass"),
+                        color_attachments: &[Some(RenderPassColorAttachment {
+                            view: &textures.aa_texture.default_view,
+                            resolve_target: None,
+                            ops: Operations::default(),
+                        })],
+                        depth_stencil_attachment: None,
+                        timestamp_writes: None,
+                        occlusion_query_set: None,
+                    });
 
-            render_pass.set_render_pipeline(vertical_pipeline);
-            render_pass.set_bind_group(
-                0,
-                &postprocess_bind_group,
-                &[view_uniform_offset.offset, settings_index.index()],
-            );
-            // render_pass.set_bind_group(1, &view_smaa_bind_groups.edge_detection_bind_group, &[]);
-            render_pass.draw(0..3, 0..1);
-        }
-
-        // PASS 4 first FDOG blur
-        {
-            let postprocess_bind_group = render_context.render_device().create_bind_group(
-                "horizontal_process_bind_group",
-                &dog_pipeline.fdog.postprocess_bind_group_layout,
-                &BindGroupEntries::sequential((
-                    &textures.lab_texture.default_view,
-                    &dog_pipeline.fdog.sampler,
-                    view_uniforms.clone(),
-                    settings_binding.clone(),
-                )),
-            );
-
-            let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-                label: Some("first fdog pass"),
-                color_attachments: &[Some(RenderPassColorAttachment {
-                    view: &textures.first_dog_texture.default_view,
-                    resolve_target: None,
-                    ops: Operations::default(),
-                })],
-                depth_stencil_attachment: None,
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            });
-
-            render_pass.set_render_pipeline(first_fdog_pipeline);
-            render_pass.set_bind_group(
-                0,
-                &postprocess_bind_group,
-                &[view_uniform_offset.offset, settings_index.index()],
-            );
-            render_pass.set_bind_group(1, &bind_groups.tfm_bind_group, &[]);
-            render_pass.draw(0..3, 0..1);
-        }
-
-        // PASS 5 second FDOG blur
-        {
-            let postprocess_bind_group = render_context.render_device().create_bind_group(
-                "second_fdog_bind_group",
-                &dog_pipeline.fdog.postprocess_bind_group_layout,
-                &BindGroupEntries::sequential((
-                    &textures.first_dog_texture.default_view,
-                    &dog_pipeline.fdog.sampler,
-                    view_uniforms.clone(),
-                    settings_binding.clone(),
-                )),
-            );
-
-            let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-                label: Some("second fdog pass"),
-                color_attachments: &[Some(RenderPassColorAttachment {
-                    view: &textures.second_dog_texture.default_view,
-                    resolve_target: None,
-                    ops: Operations::default(),
-                })],
-                depth_stencil_attachment: None,
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            });
-
-            render_pass.set_render_pipeline(second_fdog_pipeline);
-            render_pass.set_bind_group(
-                0,
-                &postprocess_bind_group,
-                &[view_uniform_offset.offset, settings_index.index()],
-            );
-            render_pass.set_bind_group(1, &bind_groups.tfm_bind_group, &[]);
-            render_pass.draw(0..3, 0..1);
-        }
-
-        // PASS 6 AA
-        {
-            let postprocess_bind_group = render_context.render_device().create_bind_group(
-                "aa_bind_group",
-                &dog_pipeline.aa.postprocess_bind_group_layout,
-                &BindGroupEntries::sequential((
-                    &textures.second_dog_texture.default_view,
-                    &dog_pipeline.aa.sampler,
-                    view_uniforms.clone(),
-                    settings_binding.clone(),
-                )),
-            );
-
-            let mut render_pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-                label: Some("aa pass"),
-                color_attachments: &[Some(RenderPassColorAttachment {
-                    view: &textures.aa_texture.default_view,
-                    resolve_target: None,
-                    ops: Operations::default(),
-                })],
-                depth_stencil_attachment: None,
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            });
-
-            render_pass.set_render_pipeline(aa_pipeline);
-            render_pass.set_bind_group(
-                0,
-                &postprocess_bind_group,
-                &[view_uniform_offset.offset, settings_index.index()],
-            );
-            render_pass.set_bind_group(1, &bind_groups.tfm_bind_group, &[]);
-            render_pass.draw(0..3, 0..1);
+                render_pass.set_render_pipeline(aa_pipeline);
+                render_pass.set_bind_group(
+                    0,
+                    &postprocess_bind_group,
+                    &[view_uniform_offset.offset, settings_index.index()],
+                );
+                render_pass.set_bind_group(1, &bind_groups.tfm_bind_group, &[]);
+                render_pass.draw(0..3, 0..1);
+            }
         }
 
         // FINAL PASS Blend
@@ -391,10 +482,11 @@ impl ViewNode for DoGNode {
                 &postprocess_bind_group,
                 &[view_uniform_offset.offset, settings_index.index()],
             );
-            // if aa
-            render_pass.set_bind_group(1, &bind_groups.aa_blend_bind_group, &[]);
-            // else
-            // render_pass.set_bind_group(1, &bind_groups.blend_bind_group, &[]);
+            if passes_settings.aa == 1 {
+                render_pass.set_bind_group(1, &bind_groups.aa_blend_bind_group, &[]);
+            } else {
+                render_pass.set_bind_group(1, &bind_groups.blend_bind_group, &[]);
+            }
             render_pass.draw(0..3, 0..1);
         }
 

@@ -425,27 +425,24 @@ impl SpecializedRenderPipeline for DoGPipeline {
     type Key = DoGPipelineKeys;
 
     fn specialize(&self, key: Self::Key) -> RenderPipelineDescriptor {
+        let label = if key.first {
+            Some("first dog blur pass".into())
+        } else {
+            Some("second dog blur pass with difference".into())
+        };
         let entry_point = if key.first {
             "first_gaussian_blur_pass".into()
         } else {
             "second_gaussian_blur_pass".into()
         };
 
-        // I don't think I have a couple of different ones
-        // Those are the defs shown in the shader to use special parses
-        let shader_defs = if key.first {
-            vec!["FIRST".into()]
-        } else {
-            vec!["SECOND".into()]
-        };
-
         RenderPipelineDescriptor {
-            label: Some("DOG".into()),
+            label,
             layout: vec![self.postprocess_bind_group_layout.clone()],
             vertex: fullscreen_shader_vertex_state(),
             fragment: Some(FragmentState {
                 shader: DOG_SHADER_HANDLE,
-                shader_defs,
+                shader_defs: vec![],
                 entry_point,
                 targets: vec![Some(ColorTargetState {
                     format: TextureFormat::bevy_default(),

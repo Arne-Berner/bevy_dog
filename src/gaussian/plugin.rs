@@ -2,6 +2,7 @@ use super::{pipeline::DoGPipelines, settings::DoGSettings};
 use crate::gaussian::{
     node::{prepare_dog_bind_groups, DoGNode},
     pipeline::{prepare_gaussian_pipelines, DoGSpecializedRenderPipelines},
+    settings::PassesSettings,
     textures::prepare_dog_textures,
 };
 use bevy::{
@@ -37,8 +38,12 @@ impl Plugin for DoGPlugin {
             ExtractComponentPlugin::<DoGSettings>::default(),
             UniformComponentPlugin::<DoGSettings>::default(),
         ));
+        app.register_type::<PassesSettings>().add_plugins((
+            ExtractComponentPlugin::<PassesSettings>::default(),
+            UniformComponentPlugin::<PassesSettings>::default(),
+        ));
 
-        let diffuse_bytes = include_bytes!("../../assets/textures/crosshatch.jpg");
+        let diffuse_bytes = include_bytes!("../../assets/textures/crosshatch.png");
 
         let diffuse_image = image::load_from_memory(diffuse_bytes).unwrap();
         let diffuse_rgba = diffuse_image.to_rgba8();

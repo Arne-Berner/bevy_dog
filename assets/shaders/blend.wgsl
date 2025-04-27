@@ -17,6 +17,7 @@ struct DoGSettings {
     phi: f32,
     blend_strength: f32,
     dog_strength: f32,
+    // TODO not used anywhere
     brightness_offset: f32,
     saturation: f32,
     line_conv_step_sizes: vec2i,
@@ -59,10 +60,8 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
     if config.enable_layers.x == 1.0 {
         let hatchUV = in.uv * 2.0 -1.0; 
         let s1 = textureSample(hatch_texture, hatch_sampler, hatchUV * config.hatch_resolution.r * 0.5 + 0.5).rgb;
-        // if dog texture r is strong
         output = vec3(mix(vec3(s1.r), config.max_color, D.r));
         output = vec3(D.r);
-
 
         // every enabled layer will just add the respective hatching texture to the output
         if  config.enable_layers.y != 0.0 {
@@ -74,5 +73,6 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
     }
 
     return saturate(vec4(mix(col, output, config.blend_strength), 1.0));
+    // return saturate(vec4(mix(col, output, 0.0), 1.0));
 }
 

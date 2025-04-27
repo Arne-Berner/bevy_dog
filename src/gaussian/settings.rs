@@ -79,3 +79,15 @@ impl Default for DoGSettings {
         }
     }
 }
+
+#[derive(Reflect, Debug, Component, Clone, Copy, ExtractComponent, ShaderType)]
+#[reflect(Component)]
+pub struct PassesSettings {
+    pub aa: i32,
+    pub tfm: i32,
+}
+impl Default for PassesSettings {
+    fn default() -> Self {
+        PassesSettings { aa: 0, tfm: 0 }
+    }
+}
