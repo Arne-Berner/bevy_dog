@@ -23,7 +23,7 @@ struct DoGSettings {
     edge_smooth_step_sizes: vec2i,
     min_color: vec3f,
     max_color: vec3f,
-    enable_layers: vec4i,
+    enable_layers: vec4f,
     hatch_resolution: vec4f,
     thresholds: vec4f,
 }
@@ -56,16 +56,18 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
         }
     }
 
-    if config.enable_layers.x == 1 {
+    if config.enable_layers.x == 1.0 {
         let hatchUV = in.uv * 2.0 -1.0; 
         let s1 = textureSample(hatch_texture, hatch_sampler, hatchUV * config.hatch_resolution.r * 0.5 + 0.5).rgb;
         output = vec3(mix(vec3(s1.r), config.max_color, D.r));
+        output = vec3(s1.r);
+
 
         // every enabled layer will just add the respective hatching texture to the output
-        if  config.enable_layers.y != 0 {
+        if  config.enable_layers.y != 0.0 {
             output = vec3(mix(vec3(s1.g), config.max_color, D.g)) * output.rgb;
         }
-        if  config.enable_layers.z != 0 {
+        if  config.enable_layers.z != 0.0 {
             output = vec3(mix(vec3(s1.b), config.max_color, D.b)) * output.rgb;
         }
     }

@@ -366,7 +366,7 @@ impl ViewNode for DoGNode {
                 "blend_process_bind_group",
                 &dog_pipeline.blend.postprocess_bind_group_layout,
                 &BindGroupEntries::sequential((
-                    &textures.aa_texture.default_view,
+                    source,
                     &dog_pipeline.blend.sampler,
                     view_uniforms,
                     settings_binding.clone(),
