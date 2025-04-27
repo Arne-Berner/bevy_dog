@@ -59,8 +59,9 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
     if config.enable_layers.x == 1.0 {
         let hatchUV = in.uv * 2.0 -1.0; 
         let s1 = textureSample(hatch_texture, hatch_sampler, hatchUV * config.hatch_resolution.r * 0.5 + 0.5).rgb;
+        // if dog texture r is strong
         output = vec3(mix(vec3(s1.r), config.max_color, D.r));
-        output = vec3(s1.r);
+        output = vec3(D.r);
 
 
         // every enabled layer will just add the respective hatching texture to the output
