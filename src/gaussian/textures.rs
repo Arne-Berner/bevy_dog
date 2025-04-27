@@ -18,8 +18,12 @@ use bevy::{
 #[derive(Component)]
 pub struct DoGTextures {
     pub lab_texture: CachedTexture,
-    pub tfm_texture: CachedTexture,
-    pub dog_texture: CachedTexture,
+    pub eigen_texture: CachedTexture,
+    pub horizontal_texture: CachedTexture,
+    pub vertical_texture: CachedTexture,
+    pub first_dog_texture: CachedTexture,
+    pub second_dog_texture: CachedTexture,
+    pub aa_texture: CachedTexture,
     pub crosshatch_texture: Texture,
 }
 
@@ -57,10 +61,36 @@ pub fn prepare_dog_textures(
             },
         );
 
-        let tfm_texture = texture_cache.get(
+        let eigen_texture = texture_cache.get(
             &render_device,
             TextureDescriptor {
-                label: Some("TFM texture"),
+                label: Some("Eigenvector Texture"),
+                size: texture_size,
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::D2,
+                format: TextureFormat::bevy_default(),
+                usage: TextureUsages::TEXTURE_BINDING | TextureUsages::RENDER_ATTACHMENT,
+                view_formats: &[],
+            },
+        );
+        let horizontal_texture = texture_cache.get(
+            &render_device,
+            TextureDescriptor {
+                label: Some("Horizontal Blur Pass Texture"),
+                size: texture_size,
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::D2,
+                format: TextureFormat::bevy_default(),
+                usage: TextureUsages::TEXTURE_BINDING | TextureUsages::RENDER_ATTACHMENT,
+                view_formats: &[],
+            },
+        );
+        let vertical_texture = texture_cache.get(
+            &render_device,
+            TextureDescriptor {
+                label: Some("Vertical Blur Pass Texture"),
                 size: texture_size,
                 mip_level_count: 1,
                 sample_count: 1,
@@ -71,10 +101,38 @@ pub fn prepare_dog_textures(
             },
         );
 
-        let dog_texture = texture_cache.get(
+        let first_dog_texture = texture_cache.get(
             &render_device,
             TextureDescriptor {
-                label: Some("dog texture"),
+                label: Some("first dog texture"),
+                size: texture_size,
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::D2,
+                format: TextureFormat::bevy_default(),
+                usage: TextureUsages::TEXTURE_BINDING | TextureUsages::RENDER_ATTACHMENT,
+                view_formats: &[],
+            },
+        );
+
+        let second_dog_texture = texture_cache.get(
+            &render_device,
+            TextureDescriptor {
+                label: Some("second dog texture"),
+                size: texture_size,
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::D2,
+                format: TextureFormat::bevy_default(),
+                usage: TextureUsages::TEXTURE_BINDING | TextureUsages::RENDER_ATTACHMENT,
+                view_formats: &[],
+            },
+        );
+
+        let aa_texture = texture_cache.get(
+            &render_device,
+            TextureDescriptor {
+                label: Some("AA Pass Texture"),
                 size: texture_size,
                 mip_level_count: 1,
                 sample_count: 1,
@@ -126,8 +184,12 @@ pub fn prepare_dog_textures(
 
         commands.entity(entity).insert(DoGTextures {
             lab_texture,
-            tfm_texture,
-            dog_texture,
+            eigen_texture,
+            horizontal_texture,
+            vertical_texture,
+            first_dog_texture,
+            second_dog_texture,
+            aa_texture,
             crosshatch_texture,
         });
     }

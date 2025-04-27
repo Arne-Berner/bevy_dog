@@ -70,58 +70,56 @@ fn calculate_eigenvector(in: FullscreenVertexOutput) -> @location(0) vec4f {
 }
 
 
-#ifdef HORIZONTAL
 // horizontal blur pass
 @fragment
 fn horizontal_blur_pass(in: FullscreenVertexOutput) -> @location(0) vec4f {
     var out = vec4(1.0);
-    /*
-    let kernelRadius = max(1.0, floor(sigma_c * 2.45));
+    let x = 1/view.viewport.z;
+    let y = 1/view.viewport.w;
+    let xy = vec2(x,y);
+    let kernelRadius = max(1.0, floor(config.sigma_c * 2.45));
     var col = vec4<f32>(0.0);
     var kernelSum = 0.0;
     
     for (var x = -kernelRadius; x <= kernelRadius; x = x+1.) {
-        let samplePos = uv + vec2(x, 0.0) * texel_size.xy;
-        let c = textureSample(mainTex, s, samplePos);
-        let gauss = gaussian(sigma_c, x);
+        let sample_pos = in.uv + vec2(x, 0.0) * xy;
+        let c = textureSample(screen_texture, texture_sampler, sample_pos);
+        let gauss = gaussian(config.sigma_c, x);
         
         col += c * gauss;
         kernelSum += gauss;
     }
     
     out = col / kernelSum;
-    */
+    // out = vec4(1.0,0.0,0.0,1.0);
     return out;
 }
-#endif
 
-#ifdef VERTICAL
 // vertical blur pass
 @fragment
 fn vertical_blur_pass(in: FullscreenVertexOutput) -> @location(0) vec4f {
+    // var out = textureSample(screen_texture, texture_sampler, in.uv);
     var out = vec4(1.0);
-    /*
-    let kernelRadius = max(1.0, floor(sigma_c * 2.45));
+    let kernelRadius = max(1.0, floor(config.sigma_c * 2.45));
     var col = vec4<f32>(0.0);
     var kernelSum = 0.0;
     
+    let x = 1/view.viewport.z;
+    let y = 1/view.viewport.w;
+    let xy = vec2(x,y);
     for (var y = -kernelRadius; y <= kernelRadius; y = y+1.) {
-        let samplePos = uv + vec2(0.0, y) * texel_size.xy;
-        let c = textureSample(mainTex, s, samplePos);
-        let gauss = gaussian(sigma_c, y);
+        let samplePos = in.uv + vec2(0.0, y) * xy;
+        let c = textureSample(screen_texture, texture_sampler, samplePos);
+        let gauss = gaussian(config.sigma_c, y);
         
         col += c * gauss;
         kernelSum += gauss;
     }
 
     let g = vec3(col.rgb / kernelSum);
-
     let lambda1 = 0.5 * (g.y + g.x + sqrt(g.y * g.y - 2.0 * g.x * g.y + g.x * g.x + 4.0 * g.z * g.z));
     let d = vec2(g.x - lambda1, g.z);
     
-    
-    out = select(vec4(0.,1.,0.,1.), vec4(normalize(d), sqrt(lamda1), 1.), length(d) != 0);
-    */
+    out = select(vec4(0.,1.,0.,1.), vec4(normalize(d), sqrt(lambda1), 1.), length(d) != 0);
     return out;
 }
-#endif

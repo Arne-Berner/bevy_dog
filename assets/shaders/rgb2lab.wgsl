@@ -74,9 +74,7 @@ struct DoGSettings {
 @fragment
 fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
     let main = textureSample(screen_texture, texture_sampler, in.uv);
-    // let lab = rgb2lab(main.rgb);
-    let xyz = rgb2xyz(main.rgb);
-    let lab = xyz2lab(xyz);
+    let lab = rgb2lab(main.rgb);
     let lum = luminance(main.rgb);
     let out = vec3(lum);
     return vec4(lab, 1.);

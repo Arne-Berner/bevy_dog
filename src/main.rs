@@ -64,8 +64,7 @@ fn setup(
     // camera
     commands.spawn((
         Camera3d::default(),
-        Transform::from_translation(Vec3::new(20.0, 18.0, 0.0))
-            .looking_at(Vec3::default(), Vec3::Y),
+        Transform::from_translation(Vec3::new(5.0, 3.0, 0.0)).looking_at(Vec3::default(), Vec3::Y),
         /*
         Msaa::Off,
         Fxaa {

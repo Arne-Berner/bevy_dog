@@ -241,7 +241,10 @@ impl FromWorld for DoGPipelines {
 
         let pipeline_id = pipeline_cache.queue_render_pipeline(RenderPipelineDescriptor {
             label: Some("anti_aliasing_pipeline".into()),
-            layout: vec![postprocess_bind_group_layout.clone()],
+            layout: vec![
+                postprocess_bind_group_layout.clone(),
+                tfm_bind_group_layout.clone(),
+            ],
             vertex: fullscreen_shader_vertex_state(),
             fragment: Some(FragmentState {
                 shader: AA_SHADER_HANDLE,
@@ -269,7 +272,10 @@ impl FromWorld for DoGPipelines {
 
         let pipeline_id = pipeline_cache.queue_render_pipeline(RenderPipelineDescriptor {
             label: Some("blending_pipeline".into()),
-            layout: vec![postprocess_bind_group_layout.clone()],
+            layout: vec![
+                postprocess_bind_group_layout.clone(),
+                blend_bind_group_layout.clone(),
+            ],
             vertex: fullscreen_shader_vertex_state(),
             fragment: Some(FragmentState {
                 shader: BLEND_SHADER_HANDLE,
@@ -373,27 +379,27 @@ impl SpecializedRenderPipeline for FDoGPipeline {
     fn specialize(&self, key: Self::Key) -> RenderPipelineDescriptor {
         // let shader_defs = vec![preset.shader_def()];
 
-        let entry_point = if key.first {
-            "first".into()
+        let label = if key.first {
+            Some("first fdog blur pass".into())
         } else {
-            "second".into()
+            Some("second fdog blur pass with difference".into())
         };
-
-        // I don't think I have a couple of different ones
-        // Those are the defs shown in the shader to use special parses
-        let shader_defs = if key.first {
-            vec!["FIRST".into()]
+        let entry_point = if key.first {
+            "fdog_blur_pass".into()
         } else {
-            vec!["SECOND".into()]
+            "fdog_blur_and_difference".into()
         };
 
         RenderPipelineDescriptor {
-            label: Some("FDOG".into()),
-            layout: vec![self.postprocess_bind_group_layout.clone()],
+            label,
+            layout: vec![
+                self.postprocess_bind_group_layout.clone(),
+                self.tfm_bind_group_layout.clone(),
+            ],
             vertex: fullscreen_shader_vertex_state(),
             fragment: Some(FragmentState {
                 shader: FDOG_SHADER_HANDLE,
-                shader_defs,
+                shader_defs: vec![],
                 entry_point,
                 targets: vec![Some(ColorTargetState {
                     format: TextureFormat::bevy_default(),
