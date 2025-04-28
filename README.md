@@ -5,13 +5,13 @@ Please take a look at [this paper](https://users.cs.northwestern.edu/~sco590/win
 
 ## What can be achieved with this?
 There are various effects you can do with DoG. You can blur images, do edge detection and much more. You can read up on this in the linked paper above. Here are some examples that I liked:
-![first](./resources/Pasted_image.png)
+![1](./resources/DoG1.png)
 
 
-![second](./resources/Pasted_image_2.png)
+![2](./resources/DoG2.png)
 
 
-![third](./resources/Pasted_image_3.png)
+![3](./resources/DoG3.png)
 
 ## Usage
 Here's a minimal usage example:
