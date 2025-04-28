@@ -5,16 +5,16 @@ use bevy::{
     render::{extract_component::ExtractComponent, render_resource::ShaderType},
 };
 
-#[derive(Reflect, Debug, Clone, Copy)]
-enum Thresholding {
+#[derive(Reflect, Debug, Clone, Copy, PartialEq)]
+pub enum Thresholding {
     NoThreshold,
     Tanh,
     Quantization,
     SmoothQuantization,
 }
 
-#[derive(Reflect, Debug, Clone, Copy)]
-enum BlendMode {
+#[derive(Reflect, Debug, Clone, Copy, PartialEq)]
+pub enum BlendMode {
     NoBlend,
     Interpolate,
     TwoPointInterpolate,
@@ -23,30 +23,29 @@ enum BlendMode {
 #[derive(Reflect, Debug, Component, Clone, Copy, ExtractComponent, ShaderType)]
 #[reflect(Component)]
 pub struct DoGSettings {
-    thresholding: i32,
-    blend_mode: i32,
-    hatching_enabled: i32,
-    invert: i32,
-    calc_diff_before_convolution: i32,
-    sigma_c: f32,
-    sigma_e: f32,
-    sigma_m: f32,
-    sigma_a: f32,
-    quantizer_step: f32,
-    k: f32,
-    tau: f32,
-    phi: f32,
-    blend_strength: f32,
-    dog_strength: f32,
-    brightness_offset: f32,
-    saturation: f32,
-    line_conv_step_sizes: Vec2,
-    edge_smooth_step_sizes: Vec2,
-    min_color: Vec3,
-    max_color: Vec3,
-    enable_layers: Vec4,
-    hatch_resolution: Vec4,
-    thresholds: Vec4,
+    pub thresholding: i32,
+    pub blend_mode: i32,
+    pub invert: i32,
+    pub calc_diff_before_convolution: i32,
+    pub sigma_c: f32,
+    pub sigma_e: f32,
+    pub sigma_m: f32,
+    pub sigma_a: f32,
+    pub quantizer_step: f32,
+    pub k: f32,
+    pub tau: f32,
+    pub phi: f32,
+    pub blend_strength: f32,
+    pub dog_strength: f32,
+    pub line_conv_step_sizes: Vec2,
+    pub edge_smooth_step_sizes: Vec2,
+    pub min_color: Vec3,
+    pub max_color: Vec3,
+    pub enable_hatch: i32,
+    pub enable_layers: Vec4,
+    pub hatch_resolutions: Vec4,
+    pub hatch_rotations: Vec4,
+    pub thresholds: Vec4,
 }
 
 impl Default for DoGSettings {
@@ -54,7 +53,6 @@ impl Default for DoGSettings {
         DoGSettings {
             thresholding: Thresholding::NoThreshold as i32,
             blend_mode: BlendMode::NoBlend as i32,
-            hatching_enabled: 0,
             invert: 0,
             calc_diff_before_convolution: 0,
             sigma_c: 2.0,
@@ -67,15 +65,15 @@ impl Default for DoGSettings {
             phi: 1.0,
             blend_strength: 1.0,
             dog_strength: 1.0,
-            brightness_offset: 0.0,
-            saturation: 1.0,
             line_conv_step_sizes: Vec2::ONE,
             edge_smooth_step_sizes: Vec2::ONE,
             min_color: Vec3::ZERO,
             max_color: Vec3::ONE,
+            enable_hatch: 1,
             enable_layers: Vec4::from_array([1., 0., 0., 0.]),
-            hatch_resolution: Vec4::ONE,
-            thresholds: Vec4::from_array([50.0, 20.0, 30.0, 40.0]),
+            hatch_resolutions: Vec4::ONE,
+            hatch_rotations: Vec4::from_array([15., 60., 105., 170.]),
+            thresholds: Vec4::from_array([90.0, 20.0, 30.0, 40.0]),
         }
     }
 }

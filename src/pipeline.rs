@@ -2,12 +2,11 @@ use super::plugin::{
     AA_SHADER_HANDLE, BLEND_SHADER_HANDLE, DOG_SHADER_HANDLE, FDOG_SHADER_HANDLE,
     RGB2LAB_SHADER_HANDLE, TFM_SHADER_HANDLE,
 };
-use crate::gaussian::settings::DoGSettings;
+use crate::settings::DoGSettings;
 use bevy::render::render_resource::{
     AddressMode, FilterMode, Sampler, SpecializedRenderPipeline, SpecializedRenderPipelines,
 };
 use bevy::{
-    asset::DirectAssetAccessExt,
     core_pipeline::fullscreen_vertex_shader::fullscreen_shader_vertex_state,
     ecs::world::{FromWorld, World},
     image::BevyDefault,
@@ -24,9 +23,6 @@ use bevy::{
         view::ViewUniform,
     },
 };
-
-/// This example uses a shader source file from the assets subdirectory
-const SHADER_ASSET_PATH: &str = "shaders/cross_hatch.wgsl";
 
 // This contains global data used by the render pipeline. This will be created once on startup.
 #[derive(Resource)]
@@ -100,7 +96,6 @@ pub struct AntiAlliasingPipeline {
     pub postprocess_bind_group_layout: BindGroupLayout,
     pub sampler: Sampler,
     /// The bind group layout for data specific to this pass.
-    pub tfm_bind_group_layout: BindGroupLayout,
     pub pipeline_id: CachedRenderPipelineId,
 }
 
@@ -266,7 +261,6 @@ impl FromWorld for DoGPipelines {
         let aa = AntiAlliasingPipeline {
             postprocess_bind_group_layout: postprocess_bind_group_layout.clone(),
             sampler: sampler.clone(),
-            tfm_bind_group_layout,
             pipeline_id,
         };
 

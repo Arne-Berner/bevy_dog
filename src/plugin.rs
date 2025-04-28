@@ -1,8 +1,7 @@
-use super::{pipeline::DoGPipelines, settings::DoGSettings};
-use crate::gaussian::{
+use crate::{
     node::{prepare_dog_bind_groups, DoGNode},
-    pipeline::{prepare_gaussian_pipelines, DoGSpecializedRenderPipelines},
-    settings::PassesSettings,
+    pipeline::{prepare_gaussian_pipelines, DoGPipelines, DoGSpecializedRenderPipelines},
+    settings::{DoGSettings, PassesSettings},
     textures::prepare_dog_textures,
 };
 use bevy::{
@@ -43,7 +42,7 @@ impl Plugin for DoGPlugin {
             UniformComponentPlugin::<PassesSettings>::default(),
         ));
 
-        let diffuse_bytes = include_bytes!("../../assets/textures/crosshatch.png");
+        let diffuse_bytes = include_bytes!("../assets/textures/bw_crosshatch1.png");
 
         let diffuse_image = image::load_from_memory(diffuse_bytes).unwrap();
         let diffuse_rgba = diffuse_image.to_rgba8();
@@ -71,42 +70,42 @@ impl Plugin for DoGPlugin {
         load_internal_asset!(
             app,
             RGB2LAB_SHADER_HANDLE,
-            "../../assets/shaders/rgb2lab.wgsl",
+            "../assets/shaders/rgb2lab.wgsl",
             Shader::from_wgsl
         );
 
         load_internal_asset!(
             app,
             TFM_SHADER_HANDLE,
-            "../../assets/shaders/tfm.wgsl",
+            "../assets/shaders/tfm.wgsl",
             Shader::from_wgsl
         );
 
         load_internal_asset!(
             app,
             FDOG_SHADER_HANDLE,
-            "../../assets/shaders/fdog.wgsl",
+            "../assets/shaders/fdog.wgsl",
             Shader::from_wgsl
         );
 
         load_internal_asset!(
             app,
             DOG_SHADER_HANDLE,
-            "../../assets/shaders/dog.wgsl",
+            "../assets/shaders/dog.wgsl",
             Shader::from_wgsl
         );
 
         load_internal_asset!(
             app,
             AA_SHADER_HANDLE,
-            "../../assets/shaders/aa.wgsl",
+            "../assets/shaders/aa.wgsl",
             Shader::from_wgsl
         );
 
         load_internal_asset!(
             app,
             BLEND_SHADER_HANDLE,
-            "../../assets/shaders/blend.wgsl",
+            "../assets/shaders/blend.wgsl",
             Shader::from_wgsl
         );
 

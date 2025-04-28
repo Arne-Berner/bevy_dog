@@ -10,7 +10,6 @@ fn gaussian(sigma: f32, pos: f32)->f32{
 struct DoGSettings {
     thresholding: i32,
     blend_mode: i32,
-    hatching_enabled: i32,
     invert: i32,
     calc_diff_before_convolution: i32,
     sigma_c: f32,
@@ -23,16 +22,17 @@ struct DoGSettings {
     phi: f32,
     blend_strength: f32,
     dog_strength: f32,
-    brightness_offset: f32,
-    saturation: f32,
     line_conv_step_sizes: vec2i,
     edge_smooth_step_sizes: vec2i,
     min_color: vec3f,
     max_color: vec3f,
-    enable_layers: vec4i,
-    hatch_resolution: vec4f,
+    enable_hatch: i32,
+    enable_layers: vec4f,
+    hatch_resolutions: vec4f,
+    hatch_rotations: vec4f,
     thresholds: vec4f,
 }
+
 
 @group(0) @binding(0) var screen_texture: texture_2d<f32>;
 @group(0) @binding(1) var texture_sampler: sampler;

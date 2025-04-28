@@ -3,12 +3,11 @@ use bevy::{
     prelude::*,
 };
 mod debug_ui;
-mod gaussian;
-// use debug_ui::DebugUIPlugin;
-use gaussian::{
+use bevy_dog::{
     plugin::DoGPlugin,
     settings::{DoGSettings, PassesSettings},
 };
+use debug_ui::DebugUIPlugin;
 
 fn main() {
     App::new()
@@ -27,7 +26,7 @@ fn main() {
                     }),
                     ..default()
                 }),
-            // DebugUIPlugin,
+            DebugUIPlugin,
             DoGPlugin,
         ))
         .register_type::<Rotates>()
@@ -60,18 +59,16 @@ fn setup(
         Transform::from_xyz(0.0, 0.5, 0.0),
         Rotates,
     ));
+    commands.spawn((
+        Mesh3d(meshes.add(Sphere::new(0.5))),
+        MeshMaterial3d(materials.add(Color::srgb_u8(255, 144, 124))),
+        Transform::from_xyz(0.0, 0.5, -1.5),
+        Rotates,
+    ));
     // camera
     commands.spawn((
         Camera3d::default(),
         Transform::from_translation(Vec3::new(5.0, 3.0, 0.0)).looking_at(Vec3::default(), Vec3::Y),
-        /*
-        Msaa::Off,
-        Fxaa {
-            enabled: true,
-            edge_threshold: Sensitivity::Extreme,
-            edge_threshold_min: Sensitivity::Extreme,
-        },
-        */
         DoGSettings::default(),
         PassesSettings::default(),
     ));
@@ -79,8 +76,8 @@ fn setup(
     // light
     commands.spawn((
         SpotLight {
-            intensity: 180_000_000.,
-            // shadows_enabled: true,
+            intensity: 500_000_000.,
+            shadows_enabled: true,
             inner_angle: 0.0,
             outer_angle: 0.8,
             ..default()
@@ -96,8 +93,6 @@ struct Rotates;
 /// Rotates any entity around the x and y axis
 fn rotate(time: Res<Time>, mut query: Query<&mut Transform, With<Rotates>>) {
     for mut transform in &mut query {
-        // transform.rotate_x(0.55 * time.delta_secs());
-        // transform.rotate_z(0.15 * time.delta_secs());
         transform.rotate_y(0.55 * time.delta_secs());
     }
 }

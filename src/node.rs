@@ -1,4 +1,4 @@
-use super::{
+use crate::{
     pipeline::{DoGPipelines, GaussianPipelineIDs},
     plugin::CROSSHATCH_TEXTURE_HANDLE,
     settings::{DoGSettings, PassesSettings},
@@ -55,8 +55,11 @@ impl ViewNode for DoGNode {
         let pipeline_cache = world.resource::<PipelineCache>();
         let dog_pipeline = world.resource::<DoGPipelines>();
 
-        let err = pipeline_cache.get_render_pipeline_state(view_pipelines.dog_pipeline_ids.second);
+        let err = pipeline_cache
+            .get_render_pipeline_state(view_pipelines.rgb2lab_pipeline_id)
+            .unwrap();
 
+        /*
         if let Some(err) = match err {
             bevy::render::render_resource::CachedPipelineState::Queued => None,
             bevy::render::render_resource::CachedPipelineState::Creating(_) => None,
@@ -79,38 +82,38 @@ impl ViewNode for DoGNode {
                 println!("{:?}", state.inner);
             }
         }
+        */
 
-        let rgb2lab_pipeline = pipeline_cache
-            .get_render_pipeline(view_pipelines.rgb2lab_pipeline_id)
-            .unwrap();
-        let eigenvector_pipeline = pipeline_cache
-            .get_render_pipeline(view_pipelines.tfm_pipeline_ids.eigenvector_pipeline_id)
-            .unwrap();
-        let horizontal_pipeline = pipeline_cache
-            .get_render_pipeline(view_pipelines.tfm_pipeline_ids.horizontal_pipeline_id)
-            .unwrap();
-        let vertical_pipeline = pipeline_cache
-            .get_render_pipeline(view_pipelines.tfm_pipeline_ids.vertical_pipeline_id)
-            .unwrap();
-        let first_fdog_pipeline = pipeline_cache
-            .get_render_pipeline(view_pipelines.fdog_pipeline_ids.first)
-            .unwrap();
-        let second_fdog_pipeline = pipeline_cache
-            .get_render_pipeline(view_pipelines.fdog_pipeline_ids.second)
-            .unwrap();
-        let first_dog_pipeline = pipeline_cache
-            .get_render_pipeline(view_pipelines.dog_pipeline_ids.first)
-            .unwrap();
-        let second_dog_pipeline = pipeline_cache
-            .get_render_pipeline(view_pipelines.dog_pipeline_ids.second)
-            .unwrap();
-        let aa_pipeline = pipeline_cache
-            .get_render_pipeline(view_pipelines.aa_pipeline_id)
-            .unwrap();
-        let blend_pipeline = pipeline_cache
-            .get_render_pipeline(view_pipelines.blend_pipeline_id)
-            .unwrap();
-
+        let (
+            Some(rgb2lab_pipeline),
+            Some(eigenvector_pipeline),
+            Some(vertical_pipeline),
+            Some(horizontal_pipeline),
+            Some(first_fdog_pipeline),
+            Some(second_fdog_pipeline),
+            Some(first_dog_pipeline),
+            Some(second_dog_pipeline),
+            Some(aa_pipeline),
+            Some(blend_pipeline),
+        ) = (
+            pipeline_cache.get_render_pipeline(view_pipelines.rgb2lab_pipeline_id),
+            pipeline_cache
+                .get_render_pipeline(view_pipelines.tfm_pipeline_ids.eigenvector_pipeline_id),
+            pipeline_cache
+                .get_render_pipeline(view_pipelines.tfm_pipeline_ids.vertical_pipeline_id),
+            pipeline_cache
+                .get_render_pipeline(view_pipelines.tfm_pipeline_ids.horizontal_pipeline_id),
+            pipeline_cache.get_render_pipeline(view_pipelines.fdog_pipeline_ids.first),
+            pipeline_cache.get_render_pipeline(view_pipelines.fdog_pipeline_ids.second),
+            pipeline_cache.get_render_pipeline(view_pipelines.dog_pipeline_ids.first),
+            pipeline_cache.get_render_pipeline(view_pipelines.dog_pipeline_ids.second),
+            pipeline_cache.get_render_pipeline(view_pipelines.aa_pipeline_id),
+            pipeline_cache.get_render_pipeline(view_pipelines.blend_pipeline_id),
+        )
+        else {
+            println!("cache not workng");
+            return Ok(());
+        };
         let postprocess = view_target.post_process_write();
         let (source, destination) = (postprocess.source, postprocess.destination);
         let view_uniforms = world.resource::<ViewUniforms>();
@@ -575,30 +578,4 @@ pub fn prepare_dog_bind_groups(
 }
 /*
 // Fetch the render pipelines.
-let (
-    Some(rgb2lab_pipeline),
-    Some(vertical_tfm_pipeline),
-    Some(horizontal_tfm_pipeline),
-    Some(first_fdog_pipeline),
-    Some(second_fdog_pipeline),
-    Some(first_dog_pipeline),
-    Some(second_dog_pipeline),
-    Some(aa_pipeline),
-    Some(blend_pipeline),
-) = (
-    pipeline_cache
-        .get_render_pipeline(view_pipelines.tfm_pipeline_ids.vertical_pipeline_id),
-    pipeline_cache
-        .get_render_pipeline(view_pipelines.tfm_pipeline_ids.horizontal_pipeline_id),
-    pipeline_cache.get_render_pipeline(view_pipelines.fdog_pipeline_ids.first),
-    pipeline_cache.get_render_pipeline(view_pipelines.fdog_pipeline_ids.second),
-    pipeline_cache.get_render_pipeline(view_pipelines.dog_pipeline_ids.first),
-    pipeline_cache.get_render_pipeline(view_pipelines.dog_pipeline_ids.second),
-    pipeline_cache.get_render_pipeline(view_pipelines.aa_pipeline_id),
-    pipeline_cache.get_render_pipeline(view_pipelines.blend_pipeline_id),
-)
-else {
-    println!("cache not workng");
-    return Ok(());
-};
-    */
+ */

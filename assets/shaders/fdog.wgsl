@@ -10,7 +10,6 @@ fn gaussian(sigma: f32, pos: f32)->f32{
 struct DoGSettings {
     thresholding: i32,
     blend_mode: i32,
-    hatching_enabled: i32,
     invert: i32,
     calc_diff_before_convolution: i32,
     sigma_c: f32,
@@ -23,16 +22,17 @@ struct DoGSettings {
     phi: f32,
     blend_strength: f32,
     dog_strength: f32,
-    brightness_offset: f32,
-    saturation: f32,
     line_conv_step_sizes: vec2i,
     edge_smooth_step_sizes: vec2i,
     min_color: vec3f,
     max_color: vec3f,
-    enable_layers: vec4i,
-    hatch_resolution: vec4f,
+    enable_hatch: i32,
+    enable_layers: vec4f,
+    hatch_resolutions: vec4f,
+    hatch_rotations: vec4f,
     thresholds: vec4f,
 }
+
 
 @group(0) @binding(0) var screen_texture: texture_2d<f32>;
 @group(0) @binding(1) var texture_sampler: sampler;
@@ -154,23 +154,15 @@ fn fdog_blur_and_difference(in: FullscreenVertexOutput) -> @location(0) vec4f {
     var output = vec4(0.0);
 
     if (config.thresholding == 1) {
-        output.r = select(1+tanh(config.phi * (D-config.thresholds.x)),1.0,D>= config.thresholds.x);
-        output.r = select(1+tanh(config.phi * (D-config.thresholds.y)),1.0,D>=config.thresholds.y);
-        output.r = select(1+tanh(config.phi * (D-config.thresholds.z)),1.0,D>=config.thresholds.z);
-        output.r = select(1+tanh(config.phi * (D-config.thresholds.w)),1.0,D>=config.thresholds.w);
+        output.r = select(1+tanh(config.phi * (D-config.thresholds.x)),1.0,D>=config.thresholds.x);
+        output.g = select(1+tanh(config.phi * (D-config.thresholds.y)),1.0,D>=config.thresholds.y);
+        output.b = select(1+tanh(config.phi * (D-config.thresholds.z)),1.0,D>=config.thresholds.z);
+        output.a = select(1+tanh(config.phi * (D-config.thresholds.w)),1.0,D>=config.thresholds.w);
     } else if (config.thresholding == 2) {
         let a = 1.0 / config.quantizer_step;
         let b = config.thresholds.x / 100.0;
         let x = D / 100.0;
 
-        // TODO this was not vec4 in the original code
-        output = vec4(select(a* floor((pow(x,config.phi) - (a*b/2.)) / (a*b)+0.5), 1.0, x>= b));
-    } else if (config.thresholding == 2) {
-        let a = 1.0 / config.quantizer_step;
-        let b = config.thresholds.x / 100.0;
-        let x = D / 100.0;
-
-        // TODO this was not vec4 in the original code
         output = vec4(select(a* floor((pow(x,config.phi) - (a*b/2.)) / (a*b)+0.5), 1.0, x>= b));
     } else if (config.thresholding == 3) {
         let x = D / 100.;

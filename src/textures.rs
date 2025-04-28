@@ -1,5 +1,4 @@
-use super::settings::DoGSettings;
-use crate::gaussian::plugin::CROSSHATCH_TEXTURE_HANDLE;
+use crate::settings::DoGSettings;
 use bevy::{
     image::BevyDefault,
     prelude::*,
@@ -7,9 +6,9 @@ use bevy::{
         camera::ExtractedCamera,
         render_asset::RenderAssets,
         render_resource::{
-            Extent3d, Texture, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
+            Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
         },
-        renderer::{RenderDevice, RenderQueue},
+        renderer::RenderDevice,
         texture::{CachedTexture, GpuImage, TextureCache},
         view::ExtractedView,
     },
@@ -24,14 +23,11 @@ pub struct DoGTextures {
     pub first_dog_texture: CachedTexture,
     pub second_dog_texture: CachedTexture,
     pub aa_texture: CachedTexture,
-    pub crosshatch_texture: Texture,
 }
 
 pub fn prepare_dog_textures(
     mut commands: Commands,
     render_device: Res<RenderDevice>,
-    // render_queue: Res<RenderQueue>,
-    images: Res<RenderAssets<GpuImage>>,
     mut texture_cache: ResMut<TextureCache>,
     view_targets: Query<(Entity, &ExtractedCamera), (With<ExtractedView>, With<DoGSettings>)>,
 ) {
@@ -143,45 +139,6 @@ pub fn prepare_dog_textures(
             },
         );
 
-        // I don't need to create this myself, but I should be able to use load asset
-        // Fetch the two lookup textures. These are bundled in this library.
-        let Some(crosshatch_image) = images.get(&CROSSHATCH_TEXTURE_HANDLE) else {
-            return;
-        };
-
-        /*
-        let diffuse_bytes = include_bytes!("../../assets/textures/crosshatch.jpg");
-        let diffuse_image = image::load_from_memory(diffuse_bytes).unwrap();
-        let diffuse_rgba = diffuse_image.to_rgba8();
-
-        use image::GenericImageView;
-        let dimensions = diffuse_image.dimensions();
-        // this is for the texture
-        let size = Extent3d {
-            width: dimensions.0,
-            height: dimensions.1,
-            depth_or_array_layers: 1,
-        };
-
-        // I should probably create 2 more textures, because DoG needs one and TFM
-        let crosshatch_texture = render_device.create_texture_with_data(
-            &render_queue,
-            &TextureDescriptor {
-                label: Some("crosshatch-texture"),
-                size,
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: TextureDimension::D2,
-                format: TextureFormat::Rgba8UnormSrgb,
-                usage: TextureUsages::TEXTURE_BINDING,
-                view_formats: &[],
-            },
-            TextureDataOrder::default(),
-            bytemuck::cast_slice(&diffuse_rgba),
-        );
-        */
-        let crosshatch_texture = crosshatch_image.texture.clone();
-
         commands.entity(entity).insert(DoGTextures {
             lab_texture,
             eigen_texture,
@@ -190,7 +147,6 @@ pub fn prepare_dog_textures(
             first_dog_texture,
             second_dog_texture,
             aa_texture,
-            crosshatch_texture,
         });
     }
 }
