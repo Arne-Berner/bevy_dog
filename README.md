@@ -8,10 +8,10 @@ There are various effects you can do with DoG. You can blur images, do edge dete
 ![first](./resources/Pasted_image.png)
 
 
-![second](./resources/Pasted_image2.png)
+![second](./resources/Pasted_image_2.png.png)
 
 
-![third](./resources/Pasted_image3.png)
+![third](./resources/Pasted_image_3.png)
 
 ## Usage
 Here's a minimal usage example:
