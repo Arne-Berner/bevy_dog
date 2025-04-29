@@ -65,4 +65,4 @@ The slider scene additionally gives you a simple debug ui via bevy_egui.
 ## Bevy support table
 | bevy | bevy_dog  |
 |------|-----------|
-| 0.16 | 0.1       |
+| 0.16 | 0.2       |
