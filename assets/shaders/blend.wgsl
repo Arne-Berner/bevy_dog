@@ -102,6 +102,22 @@ fn fragment(in: FullscreenVertexOutput) -> @location(0) vec4f {
             let s4 = textureSample(hatch_texture, hatch_sampler, rot * hatchUV * config.hatch_resolutions.w * 0.5 + 0.5).rgb;
             output = vec3(mix(s4, config.max_color, D.a)) * output.rgb;
         }
+    } else {
+        output = vec3(1.0);
+        if config.enable_layers.x == 1.0 {
+            output = vec3(mix(config.min_color, config.max_color, D.r));
+        }
+
+        if  config.enable_layers.y != 0.0 {
+            output = vec3(mix(config.min_color, config.max_color, D.g)) * output.rgb;
+        }
+        if  config.enable_layers.z != 0.0 {
+            output = vec3(mix(config.min_color, config.max_color, D.b)) * output.rgb;
+        }
+        if  config.enable_layers.w != 0.0 {
+            output = vec3(mix(config.min_color, config.max_color, D.a)) * output.rgb;
+        }
+
     }
 
     return saturate(vec4(mix(col, output, config.blend_strength), 1.0));

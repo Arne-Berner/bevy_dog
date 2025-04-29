@@ -131,19 +131,74 @@ fn edge_detection_window(
     mut ui_state: ResMut<UiState>,
 ) {
     let ctx = contexts.ctx_mut();
-    for (mut edge_detection_settings, mut passes_settings) in &mut query {
-        egui::Window::new("Edge Detection")
+    for (mut dog_settings, mut passes_settings) in &mut query {
+        egui::Window::new("DoG Settings")
             .vscroll(true)
             .open(&mut ui_state.is_edge_window_open)
             .show(ctx, |ui| {
-                ui.heading("EdgeDetection");
+                ui.heading("Common Settings");
                 ui.style_mut().spacing.slider_width = 100.0;
-                ui.add(egui::Slider::new(&mut passes_settings.aa, 0..=1).text("Anti Aliasing"));
-                ui.add(egui::Slider::new(&mut passes_settings.tfm, 0..=1).text("Uses FDoG"));
+                ui.add(egui::Slider::new(&mut dog_settings.k, 0.1..=5.0).text("K"));
+                ui.add(egui::Slider::new(&mut dog_settings.tau, 0.0..=120.0).text("Tau"));
+                ui.add(
+                    egui::Slider::new(&mut dog_settings.blend_strength, 0.0..=2.0)
+                        .text("Blend Strength"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut dog_settings.dog_strength, 0.0..=5.0)
+                        .text("Dog Strength"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut dog_settings.min_color.x, 0.0..=1.0).text("Min Color R"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut dog_settings.min_color.y, 0.0..=1.0).text("Min Color G"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut dog_settings.min_color.z, 0.0..=1.0).text("Min Color B"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut dog_settings.max_color.x, 0.0..=1.0).text("Max Color R"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut dog_settings.max_color.y, 0.0..=1.0).text("Max Color G"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut dog_settings.max_color.z, 0.0..=1.0).text("Max Color B"),
+                );
+                ui.add(egui::Slider::new(&mut dog_settings.invert, 0..=1).text("Invert"));
+                egui::ComboBox::from_label("BlendMode")
+                    .selected_text(format!(
+                        "{:?}",
+                        match dog_settings.blend_mode {
+                            0 => BlendMode::NoBlend,
+                            1 => BlendMode::Interpolate,
+                            _ => BlendMode::TwoPointInterpolate,
+                        }
+                    ))
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(
+                            &mut dog_settings.blend_mode,
+                            BlendMode::NoBlend as i32,
+                            "No Blend",
+                        );
+                        ui.selectable_value(
+                            &mut dog_settings.blend_mode,
+                            BlendMode::Interpolate as i32,
+                            "Interpolate",
+                        );
+                        ui.selectable_value(
+                            &mut dog_settings.blend_mode,
+                            BlendMode::TwoPointInterpolate as i32,
+                            "TwoPointInterpolate",
+                        );
+                    });
+                // horizontal line
+                ui.heading("Thresholding Specific Settings");
                 egui::ComboBox::from_label("Thresholding")
                     .selected_text(format!(
                         "{:?}",
-                        match edge_detection_settings.thresholding {
+                        match dog_settings.thresholding {
                             0 => Thresholding::NoThreshold,
                             1 => Thresholding::Tanh,
                             2 => Thresholding::Quantization,
@@ -153,203 +208,142 @@ fn edge_detection_window(
                     ))
                     .show_ui(ui, |ui| {
                         ui.selectable_value(
-                            &mut edge_detection_settings.thresholding,
+                            &mut dog_settings.thresholding,
                             Thresholding::NoThreshold as i32,
                             "NoThreshold",
                         );
                         ui.selectable_value(
-                            &mut edge_detection_settings.thresholding,
+                            &mut dog_settings.thresholding,
                             Thresholding::Tanh as i32,
                             "Tanh",
                         );
                         ui.selectable_value(
-                            &mut edge_detection_settings.thresholding,
+                            &mut dog_settings.thresholding,
                             Thresholding::Quantization as i32,
                             "Quantization",
                         );
                         ui.selectable_value(
-                            &mut edge_detection_settings.thresholding,
+                            &mut dog_settings.thresholding,
                             Thresholding::SmoothQuantization as i32,
                             "Smooth Quantization",
                         );
                     });
-                egui::ComboBox::from_label("BlendMode")
-                    .selected_text(format!(
-                        "{:?}",
-                        match edge_detection_settings.blend_mode {
-                            0 => BlendMode::NoBlend,
-                            1 => BlendMode::Interpolate,
-                            _ => BlendMode::TwoPointInterpolate,
-                        }
-                    ))
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(
-                            &mut edge_detection_settings.blend_mode,
-                            BlendMode::NoBlend as i32,
-                            "No Blend",
+                if dog_settings.thresholding != 0 {
+                    ui.add(egui::Slider::new(&mut dog_settings.phi, 0.0..=10.0).text("Phi"));
+                }
+                if dog_settings.thresholding == 1 {
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.enable_layers.x, 0.0..=1.0)
+                            .text("Enable Layer 1"),
+                    );
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.enable_layers.y, 0.0..=1.0)
+                            .text("Enable Layer 2"),
+                    );
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.enable_layers.z, 0.0..=1.0)
+                            .text("Enable Layer 3"),
+                    );
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.enable_layers.w, 0.0..=1.0)
+                            .text("Enable Layer 4"),
+                    );
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.thresholds.x, 0.0..=100.0)
+                            .text("Threshold 1"),
+                    );
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.thresholds.y, 0.0..=100.0)
+                            .text("Threshold 2"),
+                    );
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.thresholds.z, 0.0..=100.0)
+                            .text("Threshold 3"),
+                    );
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.thresholds.w, 0.0..=100.0)
+                            .text("Threshold 4"),
+                    );
+                }
+                if dog_settings.thresholding > 1 {
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.quantizer_step, 0.0..=5.0)
+                            .text("Quantizer Step"),
+                    );
+                }
+                // horizontal line
+                ui.heading("Anti Aliasing Settings");
+                ui.add(egui::Slider::new(&mut passes_settings.aa, 0..=1).text("Anti Aliasing"));
+                if passes_settings.aa != 0 {
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.sigma_a, 0.0..=10.0).text("Sigma A"),
+                    );
+                }
+                // horizontal line
+                ui.heading("FDoG Settings");
+                ui.add(egui::Slider::new(&mut passes_settings.tfm, 0..=1).text("Uses FDoG"));
+                if passes_settings.tfm != 0 {
+                    ui.add(egui::Slider::new(&mut dog_settings.sigma_c, 0.0..=7.0).text("Sigma C"));
+                    ui.add(egui::Slider::new(&mut dog_settings.sigma_e, 0.0..=7.0).text("Sigma E"));
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.sigma_m, 0.0..=20.0).text("Sigma M"),
+                    );
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.line_conv_step_sizes.x, 0.0..=3.0)
+                            .text("Line Conv X"),
+                    );
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.line_conv_step_sizes.y, 0.0..=3.0)
+                            .text("Line Conv Y"),
+                    );
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.calc_diff_before_convolution, 0..=1)
+                            .text("Calc Difference before conv"),
+                    );
+                }
+                // horizontal line
+                ui.heading("Crosshatch Settings");
+                ui.add(
+                    egui::Slider::new(&mut dog_settings.enable_hatch, 0..=1).text("Enable Hatch"),
+                );
+                if dog_settings.enable_hatch == 1 {
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.hatch_resolutions.x, 0.1..=10.0)
+                            .text("First Layer Hatch resolution"),
+                    );
+                    if dog_settings.thresholding == 1 {
+                        ui.add(
+                            egui::Slider::new(&mut dog_settings.hatch_resolutions.y, 0.1..=10.0)
+                                .text("Second Layer Hatch resolution"),
                         );
-                        ui.selectable_value(
-                            &mut edge_detection_settings.blend_mode,
-                            BlendMode::Interpolate as i32,
-                            "Interpolate",
+                        ui.add(
+                            egui::Slider::new(&mut dog_settings.hatch_resolutions.z, 0.1..=10.0)
+                                .text("Third Layer Hatch resolution"),
                         );
-                        ui.selectable_value(
-                            &mut edge_detection_settings.blend_mode,
-                            BlendMode::TwoPointInterpolate as i32,
-                            "TwoPointInterpolate",
+                        ui.add(
+                            egui::Slider::new(&mut dog_settings.hatch_resolutions.w, 0.1..=10.0)
+                                .text("Fourth Layer Hatch resolution"),
                         );
-                    });
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.invert, 0..=1).text("Invert"),
-                );
-                ui.add(
-                    egui::Slider::new(
-                        &mut edge_detection_settings.calc_diff_before_convolution,
-                        0..=1,
-                    )
-                    .text("Calc Difference before conv"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.sigma_c, 0.0..=7.0)
-                        .text("Sigma C"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.sigma_e, 0.0..=7.0)
-                        .text("Sigma E"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.sigma_m, 0.0..=20.0)
-                        .text("Sigma M"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.sigma_a, 0.0..=10.0)
-                        .text("Sigma A"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.quantizer_step, 0.0..=5.0)
-                        .text("Quantizer Step"),
-                );
-                ui.add(egui::Slider::new(&mut edge_detection_settings.k, 0.1..=5.0).text("K"));
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.tau, 0.0..=120.0).text("Tau"),
-                );
-                ui.add(egui::Slider::new(&mut edge_detection_settings.phi, 0.0..=10.0).text("Phi"));
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.blend_strength, 0.0..=2.0)
-                        .text("Blend Strength"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.dog_strength, 0.0..=5.0)
-                        .text("Dog Strength"),
-                );
-                ui.add(
-                    egui::Slider::new(
-                        &mut edge_detection_settings.line_conv_step_sizes.x,
-                        0.0..=3.0,
-                    )
-                    .text("Line Conv X"),
-                );
-                ui.add(
-                    egui::Slider::new(
-                        &mut edge_detection_settings.line_conv_step_sizes.y,
-                        0.0..=3.0,
-                    )
-                    .text("Line Conv Y"),
-                );
-                // brightness_offset: 0.0, not implemented yet
-                // saturation: 1.0,
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.min_color.x, 0.0..=1.0)
-                        .text("Min Color R"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.min_color.y, 0.0..=1.0)
-                        .text("Min Color G"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.min_color.z, 0.0..=1.0)
-                        .text("Min Color B"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.max_color.x, 0.0..=1.0)
-                        .text("Max Color R"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.max_color.y, 0.0..=1.0)
-                        .text("Max Color G"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.max_color.z, 0.0..=1.0)
-                        .text("Max Color B"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.enable_hatch, 0..=1)
-                        .text("Enable Hatch"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.enable_layers.x, 0.0..=1.0)
-                        .text("Enable Layer 1"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.enable_layers.y, 0.0..=1.0)
-                        .text("Enable Layer 2"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.enable_layers.z, 0.0..=1.0)
-                        .text("Enable Layer 3"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.enable_layers.w, 0.0..=1.0)
-                        .text("Enable Layer 4"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.hatch_resolutions.x, 0.1..=10.0)
-                        .text("First Layer Hatch resolution"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.hatch_resolutions.y, 0.1..=10.0)
-                        .text("Second Layer Hatch resolution"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.hatch_resolutions.z, 0.1..=10.0)
-                        .text("Third Layer Hatch resolution"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.hatch_resolutions.w, 0.1..=10.0)
-                        .text("Fourth Layer Hatch resolution"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.hatch_rotations.x, 0.0..=180.0)
-                        .text("First Layer Hatch Rotation"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.hatch_rotations.y, 0.0..=180.0)
-                        .text("Second Layer Hatch Rotation"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.hatch_rotations.z, 0.0..=180.0)
-                        .text("Third Layer Hatch Rotation"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.hatch_rotations.w, 0.0..=180.0)
-                        .text("Fourth Layer Hatch Rotation"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.thresholds.x, 0.0..=100.0)
-                        .text("Threshold 1"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.thresholds.y, 0.0..=100.0)
-                        .text("Threshold 2"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.thresholds.z, 0.0..=100.0)
-                        .text("Threshold 3"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut edge_detection_settings.thresholds.w, 0.0..=100.0)
-                        .text("Threshold 4"),
-                );
+                    }
+                    ui.add(
+                        egui::Slider::new(&mut dog_settings.hatch_rotations.x, 0.0..=180.0)
+                            .text("First Layer Hatch Rotation"),
+                    );
+                    if dog_settings.thresholding == 1 {
+                        ui.add(
+                            egui::Slider::new(&mut dog_settings.hatch_rotations.y, 0.0..=180.0)
+                                .text("Second Layer Hatch Rotation"),
+                        );
+                        ui.add(
+                            egui::Slider::new(&mut dog_settings.hatch_rotations.z, 0.0..=180.0)
+                                .text("Third Layer Hatch Rotation"),
+                        );
+                        ui.add(
+                            egui::Slider::new(&mut dog_settings.hatch_rotations.w, 0.0..=180.0)
+                                .text("Fourth Layer Hatch Rotation"),
+                        );
+                    }
+                }
             });
     }
 }
