@@ -56,8 +56,11 @@ To run an example, use the following command (you may replace `ui` with a name o
 cargo run --example ui
 ```
 
-### Simple Scene
-The simple scene creates a sphere, a rotating cube and a plane. It also adds some very basic ui to change the DoGSettings.
+### Crosshatch Scene
+The crosshatch scene creates a sphere, a rotating cube and a plane. It does not have any UI, but uses one of the implementations for Settings
+
+### Slider Scene
+The slider scene additionally gives you a simple debug ui via bevy_egui.
 
 ## Bevy support table
 | bevy | bevy_dog  |
