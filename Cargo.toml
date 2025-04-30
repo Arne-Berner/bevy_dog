@@ -4,13 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = { version = "0.16", features = ["file_watcher"] }
+bevy = { version = "0.15", features = ["file_watcher"] }
 bytemuck = { version = "1.16", features = [ "derive" ] }
+uuid = { version = "1.13.1", features = ["v4"] }
 
 [dependencies.image]
 version = "0.24"
 default-features = false
 features = ["png", "jpeg"]
 
-[dev-dependencies]
-bevy_egui = "0.34"

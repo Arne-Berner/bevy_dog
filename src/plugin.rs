@@ -5,7 +5,7 @@ use crate::{
     textures::prepare_dog_textures,
 };
 use bevy::{
-    asset::{load_internal_asset, weak_handle, RenderAssetUsages},
+    asset::{load_internal_asset, RenderAssetUsages},
     core_pipeline::core_3d::graph::{Core3d, Node3d},
     prelude::*,
     render::{
@@ -16,16 +16,27 @@ use bevy::{
     },
 };
 
-pub const CROSSHATCH_TEXTURE_HANDLE: Handle<Image> =
-    weak_handle!("3bc8be12-aa9d-481f-bce3-56ad52cdfea4");
-pub const RGB2LAB_SHADER_HANDLE: Handle<Shader> =
-    weak_handle!("ce20ba6c-9bd1-4a62-bfe8-ba51750dbdc3");
-pub const TFM_SHADER_HANDLE: Handle<Shader> = weak_handle!("34197afe-e54f-4d38-9fc6-7c467524cc59");
-pub const FDOG_SHADER_HANDLE: Handle<Shader> = weak_handle!("8588af6b-9061-4514-bb16-95deb4e06818");
-pub const AA_SHADER_HANDLE: Handle<Shader> = weak_handle!("9d4d296b-cb2d-4e25-8125-c6854184f959");
-pub const DOG_SHADER_HANDLE: Handle<Shader> = weak_handle!("bedbea43-8967-4cdd-95b6-d3a4d630c436");
-pub const BLEND_SHADER_HANDLE: Handle<Shader> =
-    weak_handle!("b86e54d8-858a-41e5-84d5-62a34f455a77");
+pub const CROSSHATCH_TEXTURE_HANDLE: Handle<Image> = Handle::Weak(AssetId::Uuid {
+    uuid: uuid::uuid!("3bc8be12-aa9d-481f-bce3-56ad52cdfea4"),
+});
+pub const RGB2LAB_SHADER_HANDLE: Handle<Shader> = Handle::Weak(AssetId::Uuid {
+    uuid: uuid::uuid!("ce20ba6c-9bd1-4a62-bfe8-ba51750dbdc3"),
+});
+pub const TFM_SHADER_HANDLE: Handle<Shader> = Handle::Weak(AssetId::Uuid {
+    uuid: uuid::uuid!("34197afe-e54f-4d38-9fc6-7c467524cc59"),
+});
+pub const FDOG_SHADER_HANDLE: Handle<Shader> = Handle::Weak(AssetId::Uuid {
+    uuid: uuid::uuid!("8588af6b-9061-4514-bb16-95deb4e06818"),
+});
+pub const AA_SHADER_HANDLE: Handle<Shader> = Handle::Weak(AssetId::Uuid {
+    uuid: uuid::uuid!("9d4d296b-cb2d-4e25-8125-c6854184f959"),
+});
+pub const DOG_SHADER_HANDLE: Handle<Shader> = Handle::Weak(AssetId::Uuid {
+    uuid: uuid::uuid!("bedbea43-8967-4cdd-95b6-d3a4d630c436"),
+});
+pub const BLEND_SHADER_HANDLE: Handle<Shader> = Handle::Weak(AssetId::Uuid {
+    uuid: uuid::uuid!("b86e54d8-858a-41e5-84d5-62a34f455a77"),
+});
 
 /// It is generally encouraged to set up post processing effects as a plugin
 pub struct DoGPlugin;

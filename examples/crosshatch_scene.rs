@@ -2,7 +2,6 @@ use bevy::{
     log::{Level, LogPlugin},
     prelude::*,
 };
-mod debug_ui;
 use bevy_dog::{
     plugin::DoGPlugin,
     settings::{DoGSettings, PassesSettings},
@@ -29,15 +28,10 @@ fn main() {
         ))
         .register_type::<Rotates>()
         .add_systems(Startup, setup)
-        .add_systems(Update, (rotate, quit))
+        .add_systems(Update, rotate)
         .run();
 }
 
-fn quit(keyboard_input: Res<ButtonInput<KeyCode>>, mut exit: EventWriter<AppExit>) {
-    if keyboard_input.pressed(KeyCode::Escape) {
-        exit.write(AppExit::Success);
-    }
-}
 /// Set up a simple 3D scene
 fn setup(
     mut commands: Commands,

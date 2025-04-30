@@ -55,10 +55,6 @@ impl ViewNode for DoGNode {
         let pipeline_cache = world.resource::<PipelineCache>();
         let dog_pipeline = world.resource::<DoGPipelines>();
 
-        let err = pipeline_cache
-            .get_render_pipeline_state(view_pipelines.rgb2lab_pipeline_id)
-            .unwrap();
-
         /*
         if let Some(err) = match err {
             bevy::render::render_resource::CachedPipelineState::Queued => None,
@@ -111,7 +107,7 @@ impl ViewNode for DoGNode {
             pipeline_cache.get_render_pipeline(view_pipelines.blend_pipeline_id),
         )
         else {
-            println!("cache not workng");
+            println!("cache not working");
             return Ok(());
         };
         let postprocess = view_target.post_process_write();
