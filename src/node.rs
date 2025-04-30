@@ -55,7 +55,7 @@ impl ViewNode for DoGNode {
         let pipeline_cache = world.resource::<PipelineCache>();
         let dog_pipeline = world.resource::<DoGPipelines>();
 
-        let err = pipeline_cache
+        let _err = pipeline_cache
             .get_render_pipeline_state(view_pipelines.rgb2lab_pipeline_id)
             .unwrap();
 

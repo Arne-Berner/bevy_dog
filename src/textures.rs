@@ -4,7 +4,6 @@ use bevy::{
     prelude::*,
     render::{
         camera::ExtractedCamera,
-        render_asset::RenderAssets,
         render_resource::{
             Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
         },
