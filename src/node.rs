@@ -111,7 +111,7 @@ impl ViewNode for DoGNode {
             pipeline_cache.get_render_pipeline(view_pipelines.blend_pipeline_id),
         )
         else {
-            println!("cache not workng");
+            println!("Pipeline cache has not prepared the pipelines yet");
             return Ok(());
         };
         let postprocess = view_target.post_process_write();

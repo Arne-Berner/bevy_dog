@@ -337,8 +337,6 @@ impl SpecializedRenderPipeline for TFMPipeline {
             TFMPipelineKeys::Horizontal => vec!["HORIZONTAL".into()],
         };
 
-        println!("entry_point:{:?}", entry_point);
-
         RenderPipelineDescriptor {
             label,
             layout: vec![self.postprocess_bind_group_layout.clone()],
