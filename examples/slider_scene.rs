@@ -2,11 +2,13 @@ use bevy::{
     log::{Level, LogPlugin},
     prelude::*,
 };
-mod debug_ui;
 use bevy_dog::{
     plugin::DoGPlugin,
     settings::{DoGSettings, PassesSettings},
 };
+
+#[path = "debug_ui/lib.rs"]
+mod debug_ui;
 use debug_ui::DebugUIPlugin;
 
 fn main() {
