@@ -1,8 +1,4 @@
-use bevy::{
-    log::{Level, LogPlugin},
-    prelude::*,
-};
-mod debug_ui;
+use bevy::prelude::*;
 use bevy_dog::{
     plugin::DoGPlugin,
     settings::{DoGSettings, PassesSettings},
@@ -10,23 +6,7 @@ use bevy_dog::{
 
 fn main() {
     App::new()
-        .add_plugins((
-            DefaultPlugins
-                .set(LogPlugin {
-                    filter: "warn,ui=info".to_string(),
-                    level: Level::INFO,
-                    ..Default::default()
-                })
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        // You may want this set to `true` if you need virtual keyboard work in mobile browsers.
-                        prevent_default_event_handling: false,
-                        ..default()
-                    }),
-                    ..default()
-                }),
-            DoGPlugin,
-        ))
+        .add_plugins((DefaultPlugins, DoGPlugin))
         .register_type::<Rotates>()
         .add_systems(Startup, setup)
         .add_systems(Update, (rotate, quit))

@@ -8,7 +8,7 @@ use bevy::{
             Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
         },
         renderer::RenderDevice,
-        texture::{CachedTexture, GpuImage, TextureCache},
+        texture::{CachedTexture, TextureCache},
         view::ExtractedView,
     },
 };
